@@ -1,9 +1,12 @@
 
 import React from "react";
 import ProductCardComponent from "../ProductCardComponent";
+import { ProductService } from "../../service/product.service";
 
 
-export default function LandingBestSellerSectionComponent({ items }) {
+export  default async function LandingBestSellerSectionComponent({ items }) {
+  const products = await ProductService();
+  console.log(products);
   return (
     <section className="mx-auto w-full max-w-7xl py-16 lg:py-20">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
