@@ -16,39 +16,58 @@ function badgeClass(label) {
 const btnClass =
   "mt-2 block w-full rounded-xl border border-gray-900 bg-gray-900 py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800";
 
-export default function ShopCardComponent() {
+export default function ShopCardComponent({
+  product,
+  categoryLabel,
+  href,
+  rating = 4,
+}) {
+  const productId = product?.productId;
+  const productName = product?.productName ?? "Product";
+  const description = product?.description ?? "";
+  const price = product?.price ?? 0;
+  const imageUrl = product?.imageUrl;
+  const category = categoryLabel ?? "Skincare";
+  const productHref = href ?? `/dashboard/products/${productId}`;
+
   return (
-    <article className="group max-w-[300px] flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="relative aspect-square overflow-hidden">
-        <Image
-          src={"https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=800&h=1000&fit=crop"}
-          alt="image"
-          fill
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          className={`object-cover`}
-        />
+    <article className="group max-w-75 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="relative aspect-square overflow-hidden bg-gray-50">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={productName}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+            className="object-contain p-6"
+          />
+        ) : (
+          <div className="flex size-full items-center justify-center bg-linear-to-br from-gray-100 to-lime-50/30 text-4xl text-gray-400">
+            ◇
+          </div>
+        )}
       </div>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
           <h3 className="font-semibold leading-snug text-gray-900">
-            Hydra Glow Moisturizer
+            {productName}
           </h3>
           <p className="mt-1 min-h-10 line-clamp-2 text-sm leading-5 text-gray-500">
-            24-hour hydration with hyaluronic acid and ceramides.
+            {description}
           </p>
         </div>
-        <StarRow />
+        <StarRow rating={rating} />
         <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-2">
           <p className="text-xl font-semibold tabular-nums text-gray-900">
-            $62
+            ${price}
           </p>
           <span
-            className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass("Skincare")}`}
+            className={`rounded-full px-2.5 py-1 text-xs font-medium ${badgeClass(category)}`}
           >
-            Skincare
+            {category}
           </span>
         </div>
-        <Link href={``} className={`${btnClass}`}>
+        <Link href={productHref} className={btnClass}>
           View Product
         </Link>
       </div>
