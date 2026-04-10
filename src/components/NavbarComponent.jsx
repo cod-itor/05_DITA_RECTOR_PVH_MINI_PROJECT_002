@@ -4,13 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@heroui/react";
+import { useSession, signOut } from "next-auth/react";
 // import { useCart } from "@/store/cartStore";
 
 const centerLinks = [
   { href: "/", label: "Home" },
-  { href: "/products", label: "Shop", badge: "NEW" },
-  { href: "/manage-products", label: "Manage Products" },
-  { href: "/orders", label: "Orders" },
+  { href: "/dashboard/products", label: "Shop", badge: "NEW" },
+  { href: "/dashboard/manage-products", label: "Manage Products" },
+  { href: "/dashboard/orders", label: "Orders" },
 ];
 
 function CartBagIcon({ className }) {
@@ -35,10 +36,15 @@ function CartBagIcon({ className }) {
 
 function linkActive(pathname, label) {
   if (label === "Home") return pathname === "/";
-  if (label === "Shop") return pathname === "/products" || pathname.startsWith("/products/");
+  if (label === "Shop")
+    return (
+      pathname === "/dashboard/products" ||
+      pathname.startsWith("/dashboard/products/")
+    );
   if (label === "Categories") return pathname === "/categories";
-  if (label === "Orders") return pathname === "/orders";
-  if (label === "Manage Products") return pathname === "/manage-products";
+  if (label === "Orders") return pathname === "/dashboard/orders";
+  if (label === "Manage Products")
+    return pathname === "/dashboard/manage-products";
   return false;
 }
 
@@ -57,10 +63,16 @@ function authLinkClass(pathname, path, filled = false) {
 export default function NavbarComponent() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
-//   const { totalQuantity } = useCart();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const { data: session, status } = useSession();
+  //   const { totalQuantity } = useCart();
 
-//   const cartLabel =
-//     totalQuantity > 0 ? `Shopping cart, ${totalQuantity} items` : "Shopping cart";
+  const userLabel = session?.user?.name || session?.user?.email || "User";
+  const userInitial = userLabel.trim().charAt(0).toUpperCase();
+  const isAuthenticated = status === "authenticated";
+
+  //   const cartLabel =
+  //     totalQuantity > 0 ? `Shopping cart, ${totalQuantity} items` : "Shopping cart";
 
   const linkClass = (active) =>
     `relative flex items-center rounded-full px-3 py-2 text-sm font-medium transition ${
@@ -84,8 +96,12 @@ export default function NavbarComponent() {
           {centerLinks.map(({ href, label, badge }) => {
             const active = linkActive(pathname, label);
             return (
-              <Link key={href + label} href={href} className={linkClass(active)}>
-              {/* <Link key={href + label} href={href}> */}
+              <Link
+                key={href + label}
+                href={href}
+                className={linkClass(active)}
+              >
+                {/* <Link key={href + label} href={href}> */}
                 {badge && (
                   <span className="absolute -top-2 z-20 left-1/2 -translate-x-1/2 rounded-full bg-lime-400 px-1.5 py-px text-[9px] font-bold uppercase tracking-wide text-gray-900">
                     {badge}
@@ -100,20 +116,67 @@ export default function NavbarComponent() {
         </nav>
 
         <div className="z-10 flex items-center gap-2 sm:gap-3">
-          <div className="hidden items-center gap-2 sm:flex">
-            <Link href="/login" className={authLinkClass(pathname, "/login", false)}>
-              Log in
-            </Link>
-            <Link href="/register" className={authLinkClass(pathname, "/register", true)}>
-              Register
-            </Link>
+          <div className="relative hidden sm:flex">
+            <button
+              type="button"
+              title={isAuthenticated ? userLabel : "Account"}
+              onClick={() => setProfileOpen((v) => !v)}
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-900 transition hover:border-lime-300 hover:bg-lime-50"
+            >
+              {userInitial || "U"}
+            </button>
+
+            {profileOpen && (
+              <div className="absolute right-0 top-12 z-50 w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-lg">
+                {isAuthenticated ? (
+                  <>
+                    <div
+                      title={userLabel}
+                      className="px-3 py-2 text-xs text-gray-500"
+                    >
+                      Signed in as
+                      <div className="mt-0.5 truncate text-sm font-medium text-gray-900">
+                        {userLabel}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileOpen(false);
+                        signOut({ callbackUrl: "/login" });
+                      }}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setProfileOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/register"
+                      onClick={() => setProfileOpen(false)}
+                      className="block rounded-lg px-3 py-2 text-sm font-medium text-lime-800 transition hover:bg-lime-50"
+                    >
+                      Register
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <Link
-            href="/cart"
+            href="/dashboard/cart"
             // aria-label={cartLabel}
             // title={cartLabel}
             className={`relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
-              pathname === "/cart"
+              pathname === "/dashboard/cart"
                 ? "border-lime-500 bg-lime-400 text-gray-900"
                 : "border-gray-200 text-gray-700 hover:border-lime-300 hover:bg-lime-50"
             }`}
@@ -144,34 +207,55 @@ export default function NavbarComponent() {
       </div>
 
       {open && (
-        <div id="mobile-nav" className="border-t border-gray-100 bg-white py-3 md:hidden">
+        <div
+          id="mobile-nav"
+          className="border-t border-gray-100 bg-white py-3 md:hidden"
+        >
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-1">
             {centerLinks.map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  setProfileOpen(false);
+                }}
                 className="rounded-xl px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
               >
                 {label}
               </Link>
             ))}
+            {isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  signOut({ callbackUrl: "/login" });
+                }}
+                className="rounded-xl px-3 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-100"
+              >
+                Logout ({userInitial || "U"})
+              </button>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/register"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-3 py-3 text-sm font-medium text-lime-800 hover:bg-lime-50"
+                >
+                  Register
+                </Link>
+              </>
+            )}
             <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="rounded-xl px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/register"
-              onClick={() => setOpen(false)}
-              className="rounded-xl px-3 py-3 text-sm font-medium text-lime-800 hover:bg-lime-50"
-            >
-              Register
-            </Link>
-            <Link
-              href="/cart"
+              href="/dashboard/cart"
               onClick={() => setOpen(false)}
               className="rounded-xl px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >

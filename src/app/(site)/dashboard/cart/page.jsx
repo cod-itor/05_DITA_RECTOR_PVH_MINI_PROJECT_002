@@ -2,10 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import CartItemComponent from "./../../../components/cart/CartItemComponent";
-import CartSummaryComponent from "./../../../components/cart/CartSummaryComponent";
+import CartItemComponent from "../../../../components/cart/CartItemComponent";
+import CartSummaryComponent from "../../../../components/cart/CartSummaryComponent";
 
-// Static mock cart data
 const MOCK_CART_ITEMS = [
   {
     productId: 105,
@@ -42,8 +41,6 @@ export default function CartPage() {
   const handleCheckout = () => {
     alert("Proceeding to checkout... (Demo only)");
   };
-
-  // Calculate subtotal
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -54,7 +51,6 @@ export default function CartPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Your cart</h1>
           <p className="mt-2 text-gray-600">
@@ -65,16 +61,13 @@ export default function CartPage() {
 
         {cartItems.length > 0 ? (
           <>
-            {/* Product Count */}
             <div className="mb-6">
               <p className="text-sm font-medium text-gray-700">
                 {itemCount} product{itemCount !== 1 ? "s" : ""} in cart
               </p>
             </div>
 
-            {/* Main Layout - Flex with items on left and summary on right */}
             <div className="flex flex-col gap-6">
-              {/* Cart Items */}
               <div className="space-y-4 flex-1">
                 {cartItems.map((item) => (
                   <CartItemComponent
@@ -86,7 +79,6 @@ export default function CartPage() {
                 ))}
               </div>
 
-              {/* Cart Summary - Full Width */}
               <CartSummaryComponent
                 subtotal={subtotal}
                 onCheckout={handleCheckout}
@@ -100,7 +92,7 @@ export default function CartPage() {
               Your cart is empty
             </p>
             <p className="text-gray-600 mt-2">
-              Open a product, set quantity, then tap "Add to cart".
+              Open a product, set quantity, then tap &quot;Add to cart&quot;.
             </p>
             <Link href="/products">
               <button className="mt-8 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-8 rounded-full transition duration-200">

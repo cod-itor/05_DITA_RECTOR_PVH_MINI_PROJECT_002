@@ -1,7 +1,6 @@
 import Link from "next/link";
 
 function ProductIcon({ className, variant }) {
-  // Simple inline SVG icons (no external assets needed).
   if (variant === "bottle") {
     return (
       <svg
@@ -133,8 +132,6 @@ export default function AuthLayout({ children }) {
               Demo login & register experience (no backend).
             </p>
           </div>
-
-          {/* Centered form card comes from the route page */}
           <div>{children}</div>
         </div>
       </div>
