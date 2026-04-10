@@ -2,6 +2,7 @@
   "name": "web-miniproject",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -15,7 +16,9 @@
     "@heroui/theme": "^2.4.26",
     "@hookform/resolvers": "^5.2.2",
     "framer-motion": "^12.38.0",
+    "jwt-decode": "^4.0.0",
     "next": "16.2.1",
+    "next-auth": "^4.24.0",
     "postcss": "^8.5.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
