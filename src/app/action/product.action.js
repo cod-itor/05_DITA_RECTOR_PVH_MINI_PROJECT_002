@@ -1,6 +1,7 @@
 import {
   productByIdService,
   productService,
+  topSellingMiniProductsService,
   topSellingProductsService,
 } from "../../service/product.service";
 
@@ -14,4 +15,8 @@ export async function getProductByIdAction(productId, accessToken) {
 
 export async function getTopSellingProductsAction(accessToken) {
   return topSellingProductsService(accessToken);
+}
+
+export async function getTopSellingMiniProductsAction(accessToken) {
+  return topSellingMiniProductsService(accessToken);
 }

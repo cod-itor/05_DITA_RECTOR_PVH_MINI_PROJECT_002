@@ -2,19 +2,48 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+
+const fallbackProductImage = "/fallback-product.svg";
+
+function isValidImageUrl(value) {
+  if (typeof value !== "string" || value.trim().length === 0) return false;
+  if (value.startsWith("data:image/")) return true;
+  if (value.startsWith("/")) return true;
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export default function LandingHeroSectionComponent({ miniProducts }) {
+  const [brokenIds, setBrokenIds] = useState([]);
+
+  const getThumbnailSrc = (product) => {
+    const isBroken = brokenIds.includes(product.productId);
+    if (isBroken) return fallbackProductImage;
+
+    return isValidImageUrl(product.imageUrl)
+      ? product.imageUrl
+      : fallbackProductImage;
+  };
+
   return (
     <section className="relative overflow-hidden bg-white">
       <div className="mx-auto grid w-full max-w-7xl gap-10 py-14 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-20">
         <div className="max-w-xl">
-          <p className="text-sm font-medium uppercase tracking-widest text-lime-600">Natural skincare</p>
+          <p className="text-sm font-medium uppercase tracking-widest text-lime-600">
+            Natural skincare
+          </p>
           <h1 className="mt-4 text-4xl font-semibold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
             Glow from within with our skincare essentials
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-gray-600">
-            Gentle formulas, visible results — curated for calm, balanced skin and a routine you will
-            actually enjoy.
+            Gentle formulas, visible results — curated for calm, balanced skin
+            and a routine you will actually enjoy.
           </p>
           <Link
             href="/products"
@@ -46,13 +75,20 @@ export default function LandingHeroSectionComponent({ miniProducts }) {
                   href={`/products/${p.productId}`}
                   className="relative size-14 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-gray-100"
                 >
-                  {p.imageUrl ? (
-                    <Image src={p.imageUrl} alt="" fill sizes="56px" className="object-cover" />
-                  ) : (
-                    <span className="flex size-full items-center justify-center text-xs text-gray-400">
-                      ◇
-                    </span>
-                  )}
+                  <Image
+                    src={getThumbnailSrc(p)}
+                    alt={p.productName ?? "Product"}
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                    onError={() => {
+                      setBrokenIds((prev) =>
+                        prev.includes(p.productId)
+                          ? prev
+                          : [...prev, p.productId],
+                      );
+                    }}
+                  />
                 </Link>
               ))}
             </div>

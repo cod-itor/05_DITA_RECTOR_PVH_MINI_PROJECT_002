@@ -2,17 +2,30 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 
 import { categories, products } from "../../data/mockData";
-import { getTopSellingProductsAction } from "../action/product.action";
+import {
+  getTopSellingMiniProductsAction,
+  getTopSellingProductsAction,
+} from "../action/product.action";
 import { authOptions } from "../../lib/auth";
 import LandingHeroSectionComponent from "../../components/landing/LandingHeroSectionComponent";
 import LandingBestSellerSectionComponent from "../../components/landing/LandingBestSellerSectionComponent";
 import LandingEssentialComponent from "../../components/landing/LandingEssentialComponent";
 
-const heroStrip = products.slice(0, 3);
-
 export default async function Home() {
   const session = await getServerSession(authOptions);
+  let heroStrip = products.slice(0, 3);
   let bestSellers = products.slice(0, 4);
+
+  try {
+    const topSellingMini = await getTopSellingMiniProductsAction(
+      session?.accessToken,
+    );
+    if (Array.isArray(topSellingMini) && topSellingMini.length > 0) {
+      heroStrip = topSellingMini;
+    }
+  } catch {
+    heroStrip = products.slice(0, 3);
+  }
 
   try {
     const topSelling = await getTopSellingProductsAction(session?.accessToken);

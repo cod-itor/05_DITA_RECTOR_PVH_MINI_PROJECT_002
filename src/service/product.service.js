@@ -92,6 +92,17 @@ export async function productByIdService(productId, accessToken) {
 export async function topSellingProductsService(accessToken) {
     const endpoint = `${apiBaseUrl}/api/v1/products/top-selling?limit=10`;
 
+    return fetchTopSellingProducts(endpoint, accessToken);
+}
+
+export async function topSellingMiniProductsService(accessToken) {
+    const endpoint = `${apiBaseUrl}/api/v1/products/top-selling?limit=3`;
+
+    return fetchTopSellingProducts(endpoint, accessToken);
+}
+
+async function fetchTopSellingProducts(endpoint, accessToken) {
+
     const res = await fetch(endpoint, {
         method: "GET",
         headers: getAuthHeaders(accessToken),
