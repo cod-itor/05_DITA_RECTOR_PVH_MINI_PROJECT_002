@@ -1,10 +1,15 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import ProductCardEdit1 from "./ProductCardEditDisplay";
 import FormCreateProduct from "./FormCreateProduct";
 import FormEditProduct from "./FormEditProduct";
 import FormDeleteProduct from "./FormDeleteProduct";
+import {
+  deleteProductAction,
+  updateProductAction,
+} from "../../app/action/product.action";
 
 export default function ProductCardEdit({
   initialItems = [],
@@ -13,9 +18,11 @@ export default function ProductCardEdit({
   onUpdateProduct,
   onDeleteProduct,
 }) {
+  const { data: session } = useSession();
   const [openCreate, setOpenCreate] = useState(false);
   const [openEdit, setOpenEdit] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
+  const [actionError, setActionError] = useState("");
   const [sortBy, setSortBy] = useState("name");
   const [items, setItems] = useState(initialItems);
   const [selectedProductId, setSelectedProductId] = useState(null);
@@ -24,7 +31,7 @@ export default function ProductCardEdit({
   const [form, setForm] = useState({
     productName: "",
     price: "",
-    categoryId: categoryList[0]?.categoryId ?? 1,
+    categoryId: categoryList[0]?.categoryId ?? "",
     imageUrl: "",
     description: "",
     colors: [],
@@ -63,7 +70,7 @@ export default function ProductCardEdit({
     setForm({
       productName: "",
       price: "",
-      categoryId: categoryList[0]?.categoryId ?? 1,
+      categoryId: categoryList[0]?.categoryId ?? "",
       imageUrl: "",
       description: "",
       colors: [],
@@ -73,18 +80,21 @@ export default function ProductCardEdit({
 
   const closeModal = () => {
     setOpenCreate(false);
+    setActionError("");
     resetForm();
   };
 
   const closeEditModal = () => {
     setOpenEdit(false);
     setSelectedProductId(null);
+    setActionError("");
     resetForm();
   };
 
   const closeDeleteModal = () => {
     setOpenDelete(false);
     setProductToDelete(null);
+    setActionError("");
   };
 
   const createProduct = async () => {
@@ -95,7 +105,7 @@ export default function ProductCardEdit({
       productName: form.productName.trim(),
       description: form.description.trim() || "Custom product",
       price: Number(form.price),
-      categoryId: Number(form.categoryId),
+      categoryId: form.categoryId,
       imageUrl: form.imageUrl.trim() || null,
       colors: form.colors,
       sizes: form.sizes,
@@ -124,7 +134,7 @@ export default function ProductCardEdit({
     setForm({
       productName: product.productName ?? "",
       price: product.price ?? "",
-      categoryId: product.categoryId ?? categoryList[0]?.categoryId ?? 1,
+      categoryId: product.categoryId ?? categoryList[0]?.categoryId ?? "",
       imageUrl: product.imageUrl ?? "",
       description: product.description ?? "",
       colors: product.colors ?? [],
@@ -136,45 +146,60 @@ export default function ProductCardEdit({
   const saveEditProduct = async () => {
     if (!selectedProductId || !form.productName.trim() || !form.price) return;
 
-    const payload = {
-      productId: selectedProductId,
-      productName: form.productName.trim(),
-      description: form.description.trim() || "Custom product",
-      price: Number(form.price),
-      categoryId: Number(form.categoryId),
-      imageUrl: form.imageUrl.trim() || null,
+    const requestBody = {
+      name: form.productName.trim(),
+      description: form.description.trim() || "",
       colors: form.colors,
       sizes: form.sizes,
+      imageUrl: form.imageUrl.trim() || "",
+      price: Number(form.price),
+      categoryId: String(form.categoryId),
     };
 
-    if (onUpdateProduct) {
-      const updatedProduct = await onUpdateProduct(payload);
-      if (updatedProduct) {
-        setItems((prev) =>
-          prev.map((item) =>
-            item.productId === selectedProductId ? updatedProduct : item,
-          ),
-        );
-      }
-      closeEditModal();
-      return;
-    }
+    setActionError("");
 
-    setItems((prev) =>
-      prev.map((item) =>
-        item.productId === selectedProductId
-          ? {
-              ...item,
-              ...payload,
-            }
-          : item,
-      ),
-    );
-    closeEditModal();
+    try {
+      if (onUpdateProduct) {
+        const updatedProduct = await onUpdateProduct({
+          productId: selectedProductId,
+          ...requestBody,
+        });
+        if (updatedProduct) {
+          setItems((prev) =>
+            prev.map((item) =>
+              item.productId === selectedProductId ? updatedProduct : item,
+            ),
+          );
+        }
+        closeEditModal();
+        return;
+      }
+
+      if (!session?.accessToken) {
+        throw new Error("Access token is required");
+      }
+
+      const updatedProduct = await updateProductAction(
+        selectedProductId,
+        requestBody,
+        session.accessToken,
+      );
+
+      setItems((prev) =>
+        prev.map((item) =>
+          item.productId === selectedProductId ? updatedProduct : item,
+        ),
+      );
+
+      closeEditModal();
+    } catch (error) {
+      setActionError(error?.message || "Failed to update product");
+    }
   };
 
   const requestDeleteProduct = (product) => {
     if (!product?.productId) return;
+    setActionError("");
     setProductToDelete(product);
     setOpenDelete(true);
   };
@@ -182,16 +207,31 @@ export default function ProductCardEdit({
   const deleteProduct = async () => {
     if (!productToDelete?.productId) return;
 
-    if (onDeleteProduct) {
-      const success = await onDeleteProduct(productToDelete);
-      if (!success) return;
+    setActionError("");
+
+    try {
+      if (onDeleteProduct) {
+        const success = await onDeleteProduct(productToDelete);
+        if (!success) return;
+      } else {
+        if (!session?.accessToken) {
+          throw new Error("Access token is required");
+        }
+
+        await deleteProductAction(
+          productToDelete.productId,
+          session.accessToken,
+        );
+      }
+
+      setItems((prev) =>
+        prev.filter((item) => item.productId !== productToDelete.productId),
+      );
+
+      closeDeleteModal();
+    } catch (error) {
+      setActionError(error?.message || "Failed to delete product");
     }
-
-    setItems((prev) =>
-      prev.filter((item) => item.productId !== productToDelete.productId),
-    );
-
-    closeDeleteModal();
   };
 
   return (
@@ -222,6 +262,12 @@ export default function ProductCardEdit({
             + Create product
           </button>
         </div>
+
+        {actionError && (
+          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            {actionError}
+          </p>
+        )}
 
         <div className="flex flex-wrap gap-4">
           {sortedItems.map((product) => (

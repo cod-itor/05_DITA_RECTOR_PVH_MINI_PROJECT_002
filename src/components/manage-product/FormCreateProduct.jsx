@@ -66,7 +66,7 @@ export default function FormCreateProduct({
               <select
                 value={form.categoryId}
                 onChange={(event) =>
-                  updateField("categoryId", Number(event.target.value))
+                  updateField("categoryId", event.target.value)
                 }
                 className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-lime-400"
               >

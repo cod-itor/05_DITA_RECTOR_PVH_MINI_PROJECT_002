@@ -1,6 +1,8 @@
 import {
+  deleteProductService,
   productByIdService,
   productService,
+  updateProductService,
   topSellingMiniProductsService,
   topSellingProductsService,
 } from "../../service/product.service";
@@ -19,4 +21,12 @@ export async function getTopSellingProductsAction(accessToken) {
 
 export async function getTopSellingMiniProductsAction(accessToken) {
   return topSellingMiniProductsService(accessToken);
+}
+
+export async function updateProductAction(productId, requestBody, accessToken) {
+  return updateProductService(productId, requestBody, accessToken);
+}
+
+export async function deleteProductAction(productId, accessToken) {
+  return deleteProductService(productId, accessToken);
 }

@@ -7,6 +7,12 @@ function getAuthHeaders(accessToken) {
     };
 }
 
+function requireAccessToken(accessToken) {
+    if (!accessToken) {
+        throw new Error("Access token is required");
+    }
+}
+
 function mapProduct(item, categoryName) {
     return {
         productId: item?.productId,
@@ -99,6 +105,79 @@ export async function topSellingMiniProductsService(accessToken) {
     const endpoint = `${apiBaseUrl}/api/v1/products/top-selling?limit=3`;
 
     return fetchTopSellingProducts(endpoint, accessToken);
+}
+
+export async function updateProductService(productId, requestBody, accessToken) {
+    requireAccessToken(accessToken);
+
+    if (!productId) {
+        throw new Error("Product ID is required");
+    }
+
+    const res = await fetch(`${apiBaseUrl}/api/v1/products/${productId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(accessToken),
+        body: JSON.stringify(requestBody),
+    });
+
+    let data = null;
+    try {
+        data = await res.json();
+    } catch {
+        data = null;
+    }
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to update product");
+    }
+
+    const payload = data?.payload;
+
+    if (payload) {
+        const categoryName = await getCategoryName(payload?.categoryId, accessToken);
+        return mapProduct(payload, categoryName);
+    }
+
+    const categoryName = await getCategoryName(requestBody?.categoryId, accessToken);
+
+    return {
+        productId,
+        productName: requestBody?.name ?? "Product",
+        description: requestBody?.description ?? "",
+        colors: requestBody?.colors ?? [],
+        sizes: requestBody?.sizes ?? [],
+        star: 0,
+        imageUrl: requestBody?.imageUrl ?? null,
+        price: Number(requestBody?.price ?? 0),
+        categoryId: requestBody?.categoryId,
+        categoryName,
+    };
+}
+
+export async function deleteProductService(productId, accessToken) {
+    requireAccessToken(accessToken);
+
+    if (!productId) {
+        throw new Error("Product ID is required");
+    }
+
+    const res = await fetch(`${apiBaseUrl}/api/v1/products/${productId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(accessToken),
+    });
+
+    let data = null;
+    try {
+        data = await res.json();
+    } catch {
+        data = null;
+    }
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to delete product");
+    }
+
+    return true;
 }
 
 async function fetchTopSellingProducts(endpoint, accessToken) {
