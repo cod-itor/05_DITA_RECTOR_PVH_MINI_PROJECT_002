@@ -2,7 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import ButtonAddComponent from "./ButtonAddComponent";
+
+function isValidImageSrc(value) {
+  if (typeof value !== "string" || value.trim().length === 0) return false;
+
+  const src = value.trim();
+
+  if (src.startsWith("/") || src.startsWith("data:image/")) {
+    return true;
+  }
+
+  try {
+    const url = new URL(src);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 export function StarRow({ rating = 4.8 }) {
   const numericRating = Number(rating);
@@ -34,24 +52,27 @@ export function StarRow({ rating = 4.8 }) {
 
 export default function ProductCardComponent({ product }) {
   const { productId, productName, price, imageUrl, star } = product;
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [imageUrl]);
+
+  const canUseImageUrl = isValidImageSrc(imageUrl) && !hasImageError;
+  const resolvedImageSrc = canUseImageUrl ? imageUrl : "/fallback-product.svg";
 
   return (
     <article className="group relative rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md">
       <Link href={`/products/${productId}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
-          {imageUrl ? (
-            <Image
-              src={imageUrl}
-              alt=""
-              fill
-              sizes="(max-width: 768px) 50vw, 25vw"
-              className="object-cover transition group-hover:scale-[1.02]"
-            />
-          ) : (
-            <div className="flex size-full items-center justify-center bg-linear-to-br from-gray-100 to-lime-50/30 text-gray-400">
-              ◇
-            </div>
-          )}
+          <Image
+            src={resolvedImageSrc}
+            alt={productName ?? "Product image"}
+            fill
+            sizes="(max-width: 768px) 50vw, 25vw"
+            className="object-cover transition group-hover:scale-[1.02]"
+            onError={() => setHasImageError(true)}
+          />
         </div>
       </Link>
       <div className="relative mt-4 pr-14">

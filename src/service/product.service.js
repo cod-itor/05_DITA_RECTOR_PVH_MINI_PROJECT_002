@@ -88,3 +88,28 @@ export async function productByIdService(productId, accessToken) {
     const categoryName = await getCategoryName(payload?.categoryId, accessToken);
     return mapProduct(payload, categoryName);
 }
+
+export async function topSellingProductsService(accessToken) {
+    const endpoint = `${apiBaseUrl}/api/v1/products/top-selling?limit=10`;
+
+    const res = await fetch(endpoint, {
+        method: "GET",
+        headers: getAuthHeaders(accessToken),
+        cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to fetch top selling products");
+    }
+
+    const payload = Array.isArray(data?.payload) ? data.payload : [];
+    const uniqueCategoryIds = [...new Set(payload.map((item) => item?.categoryId).filter(Boolean))];
+    const categoryEntries = await Promise.all(
+        uniqueCategoryIds.map(async (categoryId) => [categoryId, await getCategoryName(categoryId, accessToken)]),
+    );
+    const categoryMap = new Map(categoryEntries);
+
+    return payload.map((item) => mapProduct(item, categoryMap.get(item?.categoryId)));
+}

@@ -82,10 +82,17 @@ export default function Page() {
 
   useEffect(() => {
     if (!product) return;
-    setSelectedColor(colorOptions[0] ?? "");
-    setSelectedSize(sizeOptions[0] ?? "");
+    const nextColorOptions = product?.colors?.length
+      ? product.colors
+      : ["green", "gray"];
+    const nextSizeOptions = product?.sizes?.length
+      ? product.sizes
+      : ["s", "m", "l"];
+
+    setSelectedColor(nextColorOptions[0] ?? "");
+    setSelectedSize(nextSizeOptions[0] ?? "");
     setQuantity(1);
-  }, [product?.productId, colorOptions, sizeOptions]);
+  }, [product]);
 
   const discountPrice = Number(product?.price ?? 0);
   const originalPrice = (discountPrice * 1.14).toFixed(2);
@@ -216,8 +223,6 @@ export default function Page() {
             </p>
           </div>
 
-        
-
           <div className="mt-8">
             <p className="mb-3 text-lg font-semibold text-gray-800">
               Choose a color
@@ -274,7 +279,7 @@ export default function Page() {
           <p className="mt-8 text-xl leading-relaxed text-gray-600">
             {product?.description}
           </p>
-            {showCartMessage && (
+          {showCartMessage && (
             <div className="mt-5 w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-base text-emerald-900">
               Added to cart —{" "}
               <Link href="/dashboard/cart" className="font-semibold underline">
