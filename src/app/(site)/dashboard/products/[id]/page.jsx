@@ -5,10 +5,11 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { StarRow } from "../../../../../components/ProductCardComponent";
+import StarRatingInput from "../../../../../components/manage-product/StarRatingInput";
 import {
   getProductByIdAction,
   getProductsAction,
+  rateProductAction,
 } from "../../../../action/product.action";
 
 export default function Page() {
@@ -24,6 +25,9 @@ export default function Page() {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const [displayRating, setDisplayRating] = useState(0);
+  const [ratingPending, setRatingPending] = useState(false);
+  const [ratingError, setRatingError] = useState("");
 
   useEffect(() => {
     if (status === "loading") return;
@@ -53,6 +57,7 @@ export default function Page() {
         setProduct(productData);
         setAllProducts(productList ?? []);
         setShowCartMessage(false);
+        setRatingError("");
       } catch (err) {
         if (!active) return;
         setError(err?.message || "Failed to load product");
@@ -92,14 +97,50 @@ export default function Page() {
     setSelectedColor(nextColorOptions[0] ?? "");
     setSelectedSize(nextSizeOptions[0] ?? "");
     setQuantity(1);
+    setDisplayRating(
+      Number.isFinite(Number(product?.star)) ? Number(product.star) : 0,
+    );
+    setRatingError("");
   }, [product]);
+
+  const handleRateProduct = async (nextRating) => {
+    if (ratingPending) return;
+
+    if (!session?.accessToken) {
+      setRatingError("Access token is required");
+      return;
+    }
+
+    if (!productId) return;
+
+    const previousRating = displayRating;
+    setDisplayRating(nextRating);
+    setRatingError("");
+    setRatingPending(true);
+
+    try {
+      const updatedStar = await rateProductAction(
+        productId,
+        nextRating,
+        session.accessToken,
+      );
+
+      const safeStar = Number.isFinite(Number(updatedStar))
+        ? Number(updatedStar)
+        : nextRating;
+
+      setDisplayRating(safeStar);
+      setProduct((prev) => (prev ? { ...prev, star: safeStar } : prev));
+    } catch (err) {
+      setDisplayRating(previousRating);
+      setRatingError(err?.message || "Failed to submit rating");
+    } finally {
+      setRatingPending(false);
+    }
+  };
 
   const discountPrice = Number(product?.price ?? 0);
   const originalPrice = (discountPrice * 1.14).toFixed(2);
-  const rating = Number.isFinite(Number(product?.star))
-    ? Number(product?.star)
-    : 0;
-
   const handleAddToCart = () => {
     setShowCartMessage(true);
   };
@@ -207,11 +248,19 @@ export default function Page() {
         </div>
 
         <div>
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col items-start justify-between gap-4">
             <h1 className="text-4xl font-bold tracking-tight text-gray-900">
               {product?.productName}
             </h1>
-            <StarRow rating={rating} />
+             <StarRatingInput
+              value={displayRating}
+              onChange={handleRateProduct}
+              disabled={ratingPending}
+            />
+            {ratingError && (
+              <p className="text-sm text-red-600">{ratingError}</p>
+            )}
+           
           </div>
 
           <div className="mt-4 flex items-center gap-3">

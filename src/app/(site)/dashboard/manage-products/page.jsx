@@ -1,7 +1,10 @@
 import ProductCardEdit from "../../../../components/manage-product/ProductCardEdit";
 import React from "react";
 import { getServerSession } from "next-auth";
-import { getProductsAction } from "../../../action/product.action";
+import {
+  getCategoriesAction,
+  getProductsAction,
+} from "../../../action/product.action";
 import { authOptions } from "../../../../lib/auth";
 
 function getCategoriesFromProducts(products) {
@@ -22,6 +25,7 @@ function getCategoriesFromProducts(products) {
 export default async function Page() {
   const session = await getServerSession(authOptions);
   let initialItems = [];
+  let categoryList = [];
 
   try {
     const products = await getProductsAction(session?.accessToken);
@@ -30,7 +34,16 @@ export default async function Page() {
     initialItems = [];
   }
 
-  const categoryList = getCategoriesFromProducts(initialItems);
+  try {
+    const categories = await getCategoriesAction(session?.accessToken);
+    categoryList = Array.isArray(categories) ? categories : [];
+  } catch {
+    categoryList = [];
+  }
+
+  if (categoryList.length === 0) {
+    categoryList = getCategoriesFromProducts(initialItems);
+  }
 
   return (
     <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-10 sm:px-6 lg:px-8">

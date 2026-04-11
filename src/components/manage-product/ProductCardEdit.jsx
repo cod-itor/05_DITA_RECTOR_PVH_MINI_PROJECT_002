@@ -154,7 +154,13 @@ export default function ProductCardEdit({
   };
 
   const saveEditProduct = async () => {
-    if (!selectedProductId || !form.productName.trim() || !form.price) return;
+    if (
+      !selectedProductId ||
+      !form.productName.trim() ||
+      !form.price ||
+      !form.categoryId
+    )
+      return;
 
     const requestBody = {
       name: form.productName.trim(),
@@ -165,6 +171,13 @@ export default function ProductCardEdit({
       price: Number(form.price),
       categoryId: String(form.categoryId),
     };
+
+    console.log("Edit product request body:", requestBody);
+
+    const selectedCategoryName =
+      categoryList.find(
+        (category) => category.categoryId === requestBody.categoryId,
+      )?.categoryName ?? "Category";
 
     setActionError("");
 
@@ -177,7 +190,14 @@ export default function ProductCardEdit({
         if (updatedProduct) {
           setItems((prev) =>
             prev.map((item) =>
-              item.productId === selectedProductId ? updatedProduct : item,
+              item.productId === selectedProductId
+                ? {
+                    ...item,
+                    ...updatedProduct,
+                    categoryId: requestBody.categoryId,
+                    categoryName: selectedCategoryName,
+                  }
+                : item,
             ),
           );
         }
@@ -197,7 +217,14 @@ export default function ProductCardEdit({
 
       setItems((prev) =>
         prev.map((item) =>
-          item.productId === selectedProductId ? updatedProduct : item,
+          item.productId === selectedProductId
+            ? {
+                ...item,
+                ...updatedProduct,
+                categoryId: requestBody.categoryId,
+                categoryName: selectedCategoryName,
+              }
+            : item,
         ),
       );
 

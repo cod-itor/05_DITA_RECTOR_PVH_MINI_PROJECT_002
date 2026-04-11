@@ -1,7 +1,9 @@
 import {
+  categoryService,
   createProductService,
   deleteProductService,
   productByIdService,
+  rateProductService,
   productService,
   updateProductService,
   topSellingMiniProductsService,
@@ -10,6 +12,10 @@ import {
 
 export async function getProductsAction(accessToken) {
   return productService(accessToken);
+}
+
+export async function getCategoriesAction(accessToken) {
+  return categoryService(accessToken);
 }
 
 export async function getProductByIdAction(productId, accessToken) {
@@ -34,4 +40,8 @@ export async function updateProductAction(productId, requestBody, accessToken) {
 
 export async function deleteProductAction(productId, accessToken) {
   return deleteProductService(productId, accessToken);
+}
+
+export async function rateProductAction(productId, star, accessToken) {
+  return rateProductService(productId, star, accessToken);
 }

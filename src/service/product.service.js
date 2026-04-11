@@ -107,6 +107,29 @@ export async function topSellingMiniProductsService(accessToken) {
     return fetchTopSellingProducts(endpoint, accessToken);
 }
 
+export async function categoryService(accessToken) {
+    requireAccessToken(accessToken);
+
+    const res = await fetch(`${apiBaseUrl}/api/v1/categories`, {
+        method: "GET",
+        headers: getAuthHeaders(accessToken),
+        cache: "no-store",
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to fetch categories");
+    }
+
+    const payload = Array.isArray(data?.payload) ? data.payload : [];
+
+    return payload.map((category) => ({
+        categoryId: category?.categoryId,
+        categoryName: category?.name ?? "Category",
+    }));
+}
+
 export async function createProductService(requestBody, accessToken) {
     requireAccessToken(accessToken);
 
@@ -174,6 +197,12 @@ export async function updateProductService(productId, requestBody, accessToken) 
         throw new Error(data?.message || "Failed to update product");
     }
 
+    const latestProduct = await productByIdService(productId, accessToken);
+
+    if (latestProduct) {
+        return latestProduct;
+    }
+
     const payload = data?.payload;
 
     if (payload) {
@@ -221,6 +250,49 @@ export async function deleteProductService(productId, accessToken) {
     }
 
     return true;
+}
+
+export async function rateProductService(productId, star, accessToken) {
+    requireAccessToken(accessToken);
+
+    if (!productId) {
+        throw new Error("Product ID is required");
+    }
+
+    const numericStar = Number(star);
+
+    if (!Number.isInteger(numericStar) || numericStar < 1 || numericStar > 5) {
+        throw new Error("Star must be an integer between 1 and 5");
+    }
+
+    const params = new URLSearchParams({ star: String(numericStar) });
+    const res = await fetch(`${apiBaseUrl}/api/v1/products/${productId}/rating?${params.toString()}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(accessToken),
+    });
+
+    let data = null;
+    try {
+        data = await res.json();
+    } catch {
+        data = null;
+    }
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to rate product");
+    }
+
+    const payloadStar = Number(data?.payload?.star);
+    if (Number.isFinite(payloadStar)) {
+        return payloadStar;
+    }
+
+    const latestProduct = await productByIdService(productId, accessToken);
+    if (latestProduct && Number.isFinite(Number(latestProduct?.star))) {
+        return Number(latestProduct.star);
+    }
+
+    return numericStar;
 }
 
 async function fetchTopSellingProducts(endpoint, accessToken) {
