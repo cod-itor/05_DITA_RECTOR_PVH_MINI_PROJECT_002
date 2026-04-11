@@ -82,7 +82,9 @@ export default function RegisterFormComponent() {
           className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none ring-lime-400/20 focus:border-lime-400 focus:ring-2 disabled:opacity-50"
         />
         {errors.firstName && (
-          <p className="mt-1 text-xs text-red-600">{errors.firstName.message}</p>
+          <p className="mt-1 text-xs text-red-600">
+            {errors.firstName.message}
+          </p>
         )}
       </div>
 
@@ -163,7 +165,9 @@ export default function RegisterFormComponent() {
           className="mt-1.5 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm outline-none ring-lime-400/20 focus:border-lime-400 focus:ring-2 disabled:opacity-50"
         />
         {errors.birthDate && (
-          <p className="mt-1 text-xs text-red-600">{errors.birthDate.message}</p>
+          <p className="mt-1 text-xs text-red-600">
+            {errors.birthDate.message}
+          </p>
         )}
       </div>
 

@@ -164,7 +164,7 @@ export const products = productsResponse.data;
 export const orders = ordersResponse.data;
 
 /** Landing “skincare essentials” filters — lowercase tag on each product, or omit for “All” only */
-export const ESSENTIALS_TABS = ["All", "Moisturizer", "Serum", "Cleanser", "Toner"];
+export const essentialsTabs = ["All", "Moisturizer", "Serum", "Cleanser", "Toner"];
 
 export function filterProductsByEssentialsTab(list, tab) {
   if (tab === "All") return list;

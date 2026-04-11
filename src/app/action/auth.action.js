@@ -1,6 +1,6 @@
 "use server";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export async function registerUserAction(formData) {
   try {
@@ -32,7 +32,7 @@ export async function registerUserAction(formData) {
     });
     console.log("Payload being sent to API:", JSON.stringify(body, null, 2));
 
-    const response = await fetch(`${API_URL}/api/v1/auths/register`, {
+  const response = await fetch(`${apiUrl}/api/v1/auths/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
