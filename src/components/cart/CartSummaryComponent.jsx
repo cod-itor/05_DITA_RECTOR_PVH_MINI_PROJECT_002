@@ -6,6 +6,7 @@ export default function CartSummaryComponent({
   subtotal,
   onCheckout,
   onClearCart,
+  isCheckingOut = false,
 }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white p-6">
@@ -26,9 +27,10 @@ export default function CartSummaryComponent({
         {/* Checkout Button */}
         <button
           onClick={onCheckout}
+          disabled={isCheckingOut}
           className="w-full bg-gray-800 hover:bg-gray-900 text-white font-medium py-3 rounded-lg transition duration-200"
         >
-          Checkout
+          {isCheckingOut ? "Checking out..." : "Checkout"}
         </button>
 
         {/* Clear Cart Button */}

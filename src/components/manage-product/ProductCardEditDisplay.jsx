@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import { StarRow } from "../ProductCardComponent";
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
@@ -21,7 +20,6 @@ export default function ProductCardEdit1({
   const price = product?.price ?? 0;
   const imageUrl = product?.imageUrl;
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -34,7 +32,6 @@ export default function ProductCardEdit1({
 
   return (
     <article className="group relative flex w-full max-w-70 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-      {/* Options Menu Container */}
       <div className="absolute right-4 top-4 z-20" ref={dropdownRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}
@@ -44,7 +41,6 @@ export default function ProductCardEdit1({
           <MoreHorizontal size={18} />
         </button>
 
-        {/* Dropdown Pop-up */}
         {isOpen && (
           <div className="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-gray-100 bg-white/90 p-1 shadow-xl backdrop-blur-md animate-in fade-in zoom-in duration-200">
             <button
@@ -91,7 +87,6 @@ export default function ProductCardEdit1({
       <div className="flex flex-col gap-1 pr-12">
         <div className="flex items-center gap-1.5 text-sm text-gray-500">
           <StarRow rating={rating} />
-          <span className="text-xs font-medium">{rating}</span>
         </div>
         <h3 className="font-semibold leading-snug text-gray-900 mt-1">
           {productName}

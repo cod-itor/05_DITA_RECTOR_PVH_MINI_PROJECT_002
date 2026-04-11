@@ -52,3 +52,23 @@ export async function getOrdersService(accessToken) {
 	const payload = Array.isArray(data?.payload) ? data.payload : [];
 	return payload.map(mapOrder);
 }
+
+export async function createOrderService(requestBody, accessToken) {
+	if (!accessToken) {
+		throw new Error("Access token is required");
+	}
+
+	const response = await fetch(`${apiBaseUrl}/api/v1/orders`, {
+		method: "POST",
+		headers: getAuthHeaders(accessToken),
+		body: JSON.stringify(requestBody),
+	});
+
+	const data = await response.json();
+
+	if (!response.ok) {
+		throw new Error(data?.message || "Failed to create order");
+	}
+
+	return data?.payload ?? data;
+}

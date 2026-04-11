@@ -1,6 +1,10 @@
 import React from "react";
 
-export default function StarRatingInput({ value = 4, onChange, disabled = false }) {
+export default function StarRatingInput({
+  value = 4,
+  onChange,
+  disabled = false,
+}) {
   const safeValue = Number.isFinite(Number(value)) ? Number(value) : 0;
 
   return (

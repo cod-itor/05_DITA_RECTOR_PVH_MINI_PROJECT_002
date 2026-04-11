@@ -11,6 +11,7 @@ import {
   getProductsAction,
   rateProductAction,
 } from "../../../../action/product.action";
+import { addProductToCartStorage } from "../../../../../lib/cart.storage";
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -142,6 +143,8 @@ export default function Page() {
   const discountPrice = Number(product?.price ?? 0);
   const originalPrice = (discountPrice * 1.14).toFixed(2);
   const handleAddToCart = () => {
+    if (!product?.productId) return;
+    addProductToCartStorage(product.productId, quantity);
     setShowCartMessage(true);
   };
 
@@ -252,7 +255,7 @@ export default function Page() {
             <h1 className="text-4xl font-bold tracking-tight text-gray-900">
               {product?.productName}
             </h1>
-             <StarRatingInput
+            <StarRatingInput
               value={displayRating}
               onChange={handleRateProduct}
               disabled={ratingPending}
@@ -260,7 +263,6 @@ export default function Page() {
             {ratingError && (
               <p className="text-sm text-red-600">{ratingError}</p>
             )}
-           
           </div>
 
           <div className="mt-4 flex items-center gap-3">

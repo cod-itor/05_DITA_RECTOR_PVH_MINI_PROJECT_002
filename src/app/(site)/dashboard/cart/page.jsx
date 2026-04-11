@@ -1,52 +1,137 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import CartItemComponent from "../../../../components/cart/CartItemComponent";
 import CartSummaryComponent from "../../../../components/cart/CartSummaryComponent";
-
-const mockCartItems = [
-  {
-    productId: 105,
-    productName: "Tea-Trica BHA Foam",
-    price: 100,
-    quantity: 2,
-    imageUrl:
-      "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&h=200&fit=crop",
-  },
-];
+import { getProductsAction } from "../../../action/product.action";
+import { createOrderAction } from "../../../action/order.action";
+import {
+  clearCartStorage,
+  getCartPayloadFromStorage,
+  removeProductFromCartStorage,
+  setProductQtyInCartStorage,
+} from "../../../../lib/cart.storage";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(mockCartItems);
+  const { data: session, status } = useSession();
+  const [orderDetailRequests, setOrderDetailRequests] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [checkoutError, setCheckoutError] = useState("");
+  const [checkoutSuccess, setCheckoutSuccess] = useState("");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
+
+  const refreshCart = () => {
+    const payload = getCartPayloadFromStorage();
+    setOrderDetailRequests(payload.orderDetailRequests ?? []);
+  };
+
+  useEffect(() => {
+    refreshCart();
+  }, []);
+
+  useEffect(() => {
+    if (status === "loading") return;
+    if (!session?.accessToken) {
+      setProducts([]);
+      return;
+    }
+
+    let active = true;
+
+    const loadProducts = async () => {
+      try {
+        const list = await getProductsAction(session.accessToken);
+        if (!active) return;
+        setProducts(Array.isArray(list) ? list : []);
+      } catch {
+        if (!active) return;
+        setProducts([]);
+      }
+    };
+
+    loadProducts();
+
+    return () => {
+      active = false;
+    };
+  }, [session?.accessToken, status]);
+
+  const cartItems = useMemo(() => {
+    return orderDetailRequests.map((detail) => {
+      const matched = products.find(
+        (product) => String(product.productId) === String(detail.productId),
+      );
+
+      return {
+        productId: detail.productId,
+        productName: matched?.productName ?? "Product",
+        price: Number(matched?.price ?? 0),
+        quantity: Number(detail.orderQty ?? 1),
+        imageUrl: matched?.imageUrl ?? null,
+      };
+    });
+  }, [orderDetailRequests, products]);
 
   const handleQuantityChange = (productId, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.productId === productId
-          ? { ...item, quantity: newQuantity }
-          : item,
-      ),
-    );
+    setCheckoutError("");
+    setCheckoutSuccess("");
+    setProductQtyInCartStorage(productId, newQuantity);
+    refreshCart();
   };
 
   const handleRemoveItem = (productId) => {
-    setCartItems((prev) => prev.filter((item) => item.productId !== productId));
+    setCheckoutError("");
+    setCheckoutSuccess("");
+    removeProductFromCartStorage(productId);
+    refreshCart();
   };
 
   const handleClearCart = () => {
-    setCartItems([]);
+    setCheckoutError("");
+    setCheckoutSuccess("");
+    clearCartStorage();
+    refreshCart();
   };
 
-  const handleCheckout = () => {
-    alert("Proceeding to checkout... (Demo only)");
+  const handleCheckout = async () => {
+    if (orderDetailRequests.length === 0) {
+      setCheckoutError("Your cart is empty");
+      return;
+    }
+
+    if (!session?.accessToken) {
+      setCheckoutError("Please login before checkout");
+      return;
+    }
+
+    setIsCheckingOut(true);
+    setCheckoutError("");
+    setCheckoutSuccess("");
+
+    try {
+      const payload = { orderDetailRequests };
+      await createOrderAction(payload, session.accessToken);
+      clearCartStorage();
+      refreshCart();
+      setCheckoutSuccess("Checkout successful");
+    } catch (error) {
+      setCheckoutError(error?.message || "Failed to checkout");
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
+
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
 
-  const itemCount = cartItems.length;
+  const itemCount = cartItems.reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0,
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,6 +143,18 @@ export default function CartPage() {
             it.
           </p>
         </div>
+
+        {checkoutError && (
+          <p className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {checkoutError}
+          </p>
+        )}
+
+        {checkoutSuccess && (
+          <p className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {checkoutSuccess}
+          </p>
+        )}
 
         {cartItems.length > 0 ? (
           <>
@@ -83,6 +180,7 @@ export default function CartPage() {
                 subtotal={subtotal}
                 onCheckout={handleCheckout}
                 onClearCart={handleClearCart}
+                isCheckingOut={isCheckingOut}
               />
             </div>
           </>
