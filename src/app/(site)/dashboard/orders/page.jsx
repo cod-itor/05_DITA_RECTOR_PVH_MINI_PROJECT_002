@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import OrderCardComponent from "../../../../components/orders/OrderCardComponent";
 
-const MOCK_ORDERS = [
+const mockOrders = [
   {
     orderId: "983d13b0-460a-40ef-b1be-5da3d86393cb",
     userId: "0c4b2fb4-16d0-4d48-b9a2-f309590782f9",
@@ -54,7 +54,7 @@ const MOCK_ORDERS = [
 ];
 
 export default function OrdersPage() {
-  const [orders] = useState(MOCK_ORDERS);
+  const [orders] = useState(mockOrders);
   const orderCount = orders.length;
 
   return (

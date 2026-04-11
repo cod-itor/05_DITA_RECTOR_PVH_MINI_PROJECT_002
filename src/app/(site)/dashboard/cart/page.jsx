@@ -5,7 +5,7 @@ import Link from "next/link";
 import CartItemComponent from "../../../../components/cart/CartItemComponent";
 import CartSummaryComponent from "../../../../components/cart/CartSummaryComponent";
 
-const MOCK_CART_ITEMS = [
+const mockCartItems = [
   {
     productId: 105,
     productName: "Tea-Trica BHA Foam",
@@ -17,7 +17,7 @@ const MOCK_CART_ITEMS = [
 ];
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState(MOCK_CART_ITEMS);
+  const [cartItems, setCartItems] = useState(mockCartItems);
 
   const handleQuantityChange = (productId, newQuantity) => {
     if (newQuantity < 1) return;

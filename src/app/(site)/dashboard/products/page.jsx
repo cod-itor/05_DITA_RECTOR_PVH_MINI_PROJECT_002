@@ -1,30 +1,96 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 import ShopCardComponent from "../../../../components/shop/ShopCardComponent";
-import {
-  products as mockProducts,
-  categories,
-  getCategoryLabel,
-} from "../../../../data/mockData";
+import { getProductsAction } from "../../../action/product.action";
+
+const defaultMaxPrice = 300;
+const quickPrice = [50, 100, 150];
+
+function getUniqueCategories(products) {
+  const map = new Map();
+
+  products.forEach((product) => {
+    if (!product?.categoryId || map.has(product.categoryId)) return;
+    map.set(product.categoryId, {
+      categoryId: product.categoryId,
+      categoryName: product.categoryName || "Category",
+    });
+  });
+
+  return [...map.values()];
+}
+
+function getCategoryCounts(products) {
+  const counts = {};
+
+  products.forEach((product) => {
+    if (!product?.categoryId) return;
+    counts[product.categoryId] = (counts[product.categoryId] ?? 0) + 1;
+  });
+
+  return counts;
+}
 
 export default function Page() {
+  const { data: session, status } = useSession();
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [maxPrice, setMaxPrice] = useState(300);
+  const [maxPrice, setMaxPrice] = useState(defaultMaxPrice);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState([]);
 
-  const categoryCounts = useMemo(() => {
-    return categories.reduce((acc, category) => {
-      acc[category.categoryId] = mockProducts.filter(
-        (p) => p.categoryId === category.categoryId,
-      ).length;
-      return acc;
-    }, {});
-  }, []);
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session?.accessToken) {
+      setProducts([]);
+      setError("Please login to view products");
+      setLoading(false);
+      return;
+    }
+
+    let active = true;
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const list = await getProductsAction(session.accessToken);
+        if (!active) return;
+        setProducts(list ?? []);
+      } catch (err) {
+        if (!active) return;
+        setProducts([]);
+        setError(err?.message || "Failed to load products");
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      active = false;
+    };
+  }, [session?.accessToken, status]);
+
+  const categories = useMemo(() => getUniqueCategories(products), [products]);
+  const categoryCounts = useMemo(() => getCategoryCounts(products), [products]);
+
+  const getCategoryLabel = (categoryId) => {
+    const category = categories.find((item) => item.categoryId === categoryId);
+    return category?.categoryName ?? "Category";
+  };
 
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter((item) => {
-      const hitName = `${item.productName} ${item.brand}`
+    return products.filter((item) => {
+      const hitName = `${item.productName ?? ""} ${item.brand ?? ""}`
         .toLowerCase()
         .includes(search.toLowerCase());
       const hitPrice = Number(item.price) <= maxPrice;
@@ -34,7 +100,7 @@ export default function Page() {
           : selectedCategoryIds.includes(item.categoryId);
       return hitName && hitPrice && hitCategory;
     });
-  }, [search, maxPrice, selectedCategoryIds]);
+  }, [products, search, maxPrice, selectedCategoryIds]);
 
   const toggleCategory = (categoryId) => {
     setSelectedCategoryIds((prev) =>
@@ -46,7 +112,7 @@ export default function Page() {
 
   const resetFilters = () => {
     setSearch("");
-    setMaxPrice(300);
+    setMaxPrice(defaultMaxPrice);
     setSelectedCategoryIds([]);
   };
 
@@ -91,21 +157,18 @@ export default function Page() {
             </p>
             <p className="mt-2 text-xl font-semibold text-gray-900">
               $0 - ${maxPrice}
-              <span className="ml-1 text-base font-normal text-gray-400">
-                (no limit)
-              </span>
             </p>
             <input
               type="range"
               min="0"
-              max="300"
+              max={defaultMaxPrice}
               value={maxPrice}
               onChange={(event) => setMaxPrice(Number(event.target.value))}
               className="mt-4 w-full accent-slate-900"
             />
             <div className="mt-1 flex items-center justify-between text-sm text-gray-400">
               <span>$0</span>
-              <span>$300</span>
+              <span>${defaultMaxPrice}</span>
             </div>
           </div>
 
@@ -114,7 +177,7 @@ export default function Page() {
               Quick select
             </p>
             <div className="mt-3 flex flex-wrap gap-2">
-              {[50, 100, 150].map((price) => (
+              {quickPrice.map((price) => (
                 <button
                   key={price}
                   type="button"
@@ -126,7 +189,7 @@ export default function Page() {
               ))}
               <button
                 type="button"
-                onClick={() => setMaxPrice(300)}
+                onClick={() => setMaxPrice(defaultMaxPrice)}
                 className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 transition hover:bg-gray-100"
               >
                 All prices
@@ -173,14 +236,23 @@ export default function Page() {
             {filteredProducts.length === 1 ? "" : "s"}
           </p>
 
-          <div className="flex flex-wrap items-start gap-6">
+          {loading && (
+            <p className="text-sm text-gray-500">Loading products...</p>
+          )}
+          {!loading && error && (
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+              {error}
+            </p>
+          )}
+
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
             {filteredProducts.map((item) => (
               <ShopCardComponent
                 key={item.productId}
                 product={item}
                 categoryLabel={getCategoryLabel(item.categoryId)}
                 href={`/dashboard/products/${item.productId}`}
-                rating={4}
+                rating={item.star}
               />
             ))}
           </div>

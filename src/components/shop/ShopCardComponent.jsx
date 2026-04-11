@@ -20,7 +20,7 @@ export default function ShopCardComponent({
   product,
   categoryLabel,
   href,
-  rating = 4,
+  rating,
 }) {
   const productId = product?.productId;
   const productName = product?.productName ?? "Product";
@@ -29,9 +29,10 @@ export default function ShopCardComponent({
   const imageUrl = product?.imageUrl;
   const category = categoryLabel ?? "Skincare";
   const productHref = href ?? `/dashboard/products/${productId}`;
+  const displayRating = rating ?? product?.star ?? 0;
 
   return (
-    <article className="group max-w-75 flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+    <article className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
       <div className="relative aspect-square overflow-hidden bg-gray-50">
         {imageUrl ? (
           <Image
@@ -56,7 +57,7 @@ export default function ShopCardComponent({
             {description}
           </p>
         </div>
-        <StarRow rating={rating} />
+  <StarRow rating={displayRating} />
         <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-2">
           <p className="text-xl font-semibold tabular-nums text-gray-900">
             ${price}

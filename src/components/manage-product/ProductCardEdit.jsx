@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import ProductCardEdit1 from "./ProductCardEdit1";
+import ProductCardEdit1 from "./ProductCardEditDisplay";
 import { getCategoryLabel } from "../../data/mockData";
 
 export default function ProductCardEdit({

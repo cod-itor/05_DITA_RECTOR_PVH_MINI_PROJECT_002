@@ -3,21 +3,21 @@
 import { useState } from "react";
 import { Button } from "@heroui/react";
 import {
-  ESSENTIALS_TABS,
+  essentialsTabs,
   filterProductsByEssentialsTab,
   products,
 } from "../../data/mockData";
 import ProductCardComponent from "../ProductCardComponent";
 
-const PAGE_SIZE = 8;
+const pageSize = 8;
 
 export default function LandingEssentialsGrid() {
   const [tab, setTab] = useState("All");
   const [showAll, setShowAll] = useState(false);
 
   const filtered = filterProductsByEssentialsTab(products, tab);
-  const visible = showAll ? filtered : filtered.slice(0, PAGE_SIZE);
-  const canLoadMore = !showAll && filtered.length > PAGE_SIZE;
+  const visible = showAll ? filtered : filtered.slice(0, pageSize);
+  const canLoadMore = !showAll && filtered.length > pageSize;
 
   return (
     <section id="shop" className="mx-auto w-full max-w-7xl py-16 lg:py-20">
@@ -26,7 +26,8 @@ export default function LandingEssentialsGrid() {
           Our skincare essentials
         </h2>
         <p className="mt-2 max-w-lg text-gray-500">
-          Filter by routine step — same mock catalog, organized for quick discovery.
+          Filter by routine step — same mock catalog, organized for quick
+          discovery.
         </p>
       </div>
 
@@ -35,7 +36,7 @@ export default function LandingEssentialsGrid() {
         role="tablist"
         aria-label="Product categories"
       >
-        {ESSENTIALS_TABS.map((label) => {
+        {essentialsTabs.map((label) => {
           const on = tab === label;
           return (
             <Button
@@ -60,12 +61,14 @@ export default function LandingEssentialsGrid() {
 
       <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
         {visible.map((product, index) => (
-          <ProductCardComponent product={product} key={index}/>
+          <ProductCardComponent product={product} key={index} />
         ))}
       </div>
 
       {filtered.length === 0 && (
-        <p className="mt-12 text-center text-gray-500">No products in this tab — try “All”.</p>
+        <p className="mt-12 text-center text-gray-500">
+          No products in this tab — try “All”.
+        </p>
       )}
 
       {canLoadMore && (

@@ -1,7 +1,7 @@
 import CredentialsProvider from "next-auth/providers/credentials";
 import { jwtDecode } from "jwt-decode";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
 export const authOptions = {
   providers: [
@@ -33,7 +33,7 @@ export const authOptions = {
 
           for (const payload of loginPayloads) {
             console.log("Sending payload to API:", JSON.stringify(payload, null, 2));
-            response = await fetch(`${API_URL}/api/v1/auths/login`, {
+            response = await fetch(`${apiUrl}/api/v1/auths/login`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
