@@ -107,6 +107,49 @@ export async function topSellingMiniProductsService(accessToken) {
     return fetchTopSellingProducts(endpoint, accessToken);
 }
 
+export async function createProductService(requestBody, accessToken) {
+    requireAccessToken(accessToken);
+
+    const res = await fetch(`${apiBaseUrl}/api/v1/products`, {
+        method: "POST",
+        headers: getAuthHeaders(accessToken),
+        body: JSON.stringify(requestBody),
+    });
+
+    let data = null;
+    try {
+        data = await res.json();
+    } catch {
+        data = null;
+    }
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to create product");
+    }
+
+    const payload = data?.payload;
+
+    if (payload) {
+        const categoryName = await getCategoryName(payload?.categoryId, accessToken);
+        return mapProduct(payload, categoryName);
+    }
+
+    const categoryName = await getCategoryName(requestBody?.categoryId, accessToken);
+
+    return {
+        productId: data?.payload?.productId ?? data?.productId ?? Date.now(),
+        productName: requestBody?.name ?? "Product",
+        description: requestBody?.description ?? "",
+        colors: requestBody?.colors ?? [],
+        sizes: requestBody?.sizes ?? [],
+        star: 0,
+        imageUrl: requestBody?.imageUrl ?? null,
+        price: Number(requestBody?.price ?? 0),
+        categoryId: requestBody?.categoryId,
+        categoryName,
+    };
+}
+
 export async function updateProductService(productId, requestBody, accessToken) {
     requireAccessToken(accessToken);
 

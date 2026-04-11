@@ -7,6 +7,7 @@ import FormCreateProduct from "./FormCreateProduct";
 import FormEditProduct from "./FormEditProduct";
 import FormDeleteProduct from "./FormDeleteProduct";
 import {
+  createProductAction,
   deleteProductAction,
   updateProductAction,
 } from "../../app/action/product.action";
@@ -98,35 +99,44 @@ export default function ProductCardEdit({
   };
 
   const createProduct = async () => {
-    if (!form.productName.trim() || !form.price) return;
+    if (!form.productName.trim() || !form.price || !form.categoryId) return;
 
-    const payload = {
-      brand: "Custom",
-      productName: form.productName.trim(),
-      description: form.description.trim() || "Custom product",
-      price: Number(form.price),
-      categoryId: form.categoryId,
-      imageUrl: form.imageUrl.trim() || null,
+    const requestBody = {
+      name: form.productName.trim(),
+      description: form.description.trim() || "",
       colors: form.colors,
       sizes: form.sizes,
+      imageUrl: form.imageUrl.trim() || "",
+      price: Number(form.price),
+      categoryId: String(form.categoryId),
     };
 
-    if (onCreateProduct) {
-      const createdProduct = await onCreateProduct(payload);
-      if (createdProduct) {
-        setItems((prev) => [createdProduct, ...prev]);
+    setActionError("");
+
+    try {
+      if (onCreateProduct) {
+        const createdProduct = await onCreateProduct(requestBody);
+        if (createdProduct) {
+          setItems((prev) => [createdProduct, ...prev]);
+        }
+        closeModal();
+        return;
       }
+
+      if (!session?.accessToken) {
+        throw new Error("Access token is required");
+      }
+
+      const createdProduct = await createProductAction(
+        requestBody,
+        session.accessToken,
+      );
+
+      setItems((prev) => [createdProduct, ...prev]);
       closeModal();
-      return;
+    } catch (error) {
+      setActionError(error?.message || "Failed to create product");
     }
-
-    const newProduct = {
-      productId: Date.now(),
-      ...payload,
-    };
-
-    setItems((prev) => [newProduct, ...prev]);
-    closeModal();
   };
 
   const startEditProduct = (product) => {

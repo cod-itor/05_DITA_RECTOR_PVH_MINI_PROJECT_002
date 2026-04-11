@@ -1,4 +1,5 @@
 import {
+  createProductService,
   deleteProductService,
   productByIdService,
   productService,
@@ -21,6 +22,10 @@ export async function getTopSellingProductsAction(accessToken) {
 
 export async function getTopSellingMiniProductsAction(accessToken) {
   return topSellingMiniProductsService(accessToken);
+}
+
+export async function createProductAction(requestBody, accessToken) {
+  return createProductService(requestBody, accessToken);
 }
 
 export async function updateProductAction(productId, requestBody, accessToken) {
