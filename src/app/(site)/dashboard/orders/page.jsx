@@ -1,60 +1,54 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { getOrdersAction } from "../../../action/order.action";
 import OrderCardComponent from "../../../../components/orders/OrderCardComponent";
 
-const mockOrders = [
-  {
-    orderId: "983d13b0-460a-40ef-b1be-5da3d86393cb",
-    userId: "0c4b2fb4-16d0-4d48-b9a2-f309590782f9",
-    orderDate: "Apr 3, 2026",
-    lineItems: 1,
-    total: 36.0,
-    products: [
-      {
-        name: "Tea-Trica B5 Cream",
-        quantity: 3,
-        price: 36.0,
-      },
-    ],
-  },
-  {
-    orderId: "a1b2c3d4-e5f6-47g8-h9i0-j1k2l3m4n5o6",
-    userId: "0c4b2fb4-16d0-4d48-b9a2-f309590782f9",
-    orderDate: "Apr 2, 2026",
-    lineItems: 2,
-    total: 150.0,
-    products: [
-      {
-        name: "Revitalizing Night Serum",
-        quantity: 1,
-        price: 89.0,
-      },
-      {
-        name: "Hydra Glow Moisturizer",
-        quantity: 2,
-        price: 62.0,
-      },
-    ],
-  },
-  {
-    orderId: "p7q8r9s0-t1u2-43v4-w5x6-y7z8a9b0c1d",
-    userId: "0c4b2fb4-16d0-4d48-b9a2-f309590782f9",
-    orderDate: "Mar 28, 2026",
-    lineItems: 1,
-    total: 45.99,
-    products: [
-      {
-        name: "Luxe Lip Tint",
-        quantity: 1,
-        price: 45.99,
-      },
-    ],
-  },
-];
-
 export default function OrdersPage() {
-  const [orders] = useState(mockOrders);
+  const { data: session, status } = useSession();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session?.accessToken) {
+      setError("Please login to view orders");
+      setLoading(false);
+      setOrders([]);
+      return;
+    }
+
+    let active = true;
+
+    const fetchOrders = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const data = await getOrdersAction(session.accessToken);
+        if (!active) return;
+        setOrders(data ?? []);
+      } catch (err) {
+        if (!active) return;
+        setError(err?.message || "Failed to load orders");
+        setOrders([]);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchOrders();
+
+    return () => {
+      active = false;
+    };
+  }, [session?.accessToken, status]);
+
   const orderCount = orders.length;
 
   return (
@@ -67,7 +61,17 @@ export default function OrdersPage() {
           </p>
         </div>
 
-        {orders.length > 0 ? (
+        {loading && (
+          <p className="mb-6 text-sm text-gray-500">Loading orders...</p>
+        )}
+
+        {!loading && error && (
+          <p className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            {error}
+          </p>
+        )}
+
+        {!loading && !error && orders.length > 0 ? (
           <div className="flex flex-col gap-6">
             {orders.map((order) => (
               <OrderCardComponent key={order.orderId} order={order} />

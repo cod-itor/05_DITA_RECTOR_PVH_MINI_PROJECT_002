@@ -94,7 +94,7 @@ export default function CartPage() {
             <p className="text-gray-600 mt-2">
               Open a product, set quantity, then tap &quot;Add to cart&quot;.
             </p>
-            <Link href="/products">
+            <Link href="/dashboard/products">
               <button className="mt-8 bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-8 rounded-full transition duration-200">
                 Shop products
               </button>
