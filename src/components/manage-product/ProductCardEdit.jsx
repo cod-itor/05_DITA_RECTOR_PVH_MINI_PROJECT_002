@@ -313,7 +313,7 @@ export default function ProductCardEdit({
               product={product}
               categoryLabel={product.categoryName ?? "Category"}
               href={`/dashboard/products/${product.productId}`}
-              rating={product.rating ?? 4}
+              rating={product.star ?? product.rating ?? 0}
               onEdit={startEditProduct}
               onDelete={requestDeleteProduct}
             />

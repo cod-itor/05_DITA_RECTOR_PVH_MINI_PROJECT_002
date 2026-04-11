@@ -9,7 +9,7 @@ export default function ProductCardEdit1({
   product,
   categoryLabel,
   href,
-  rating = 4,
+  rating,
   onEdit,
   onDelete,
 }) {
@@ -19,6 +19,7 @@ export default function ProductCardEdit1({
   const productName = product?.productName ?? "Product";
   const price = product?.price ?? 0;
   const imageUrl = product?.imageUrl;
+  const displayRating = rating ?? product?.star ?? product?.rating ?? 0;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -86,7 +87,7 @@ export default function ProductCardEdit1({
 
       <div className="flex flex-col gap-1 pr-12">
         <div className="flex items-center gap-1.5 text-sm text-gray-500">
-          <StarRow rating={rating} />
+          <StarRow rating={displayRating} />
         </div>
         <h3 className="font-semibold leading-snug text-gray-900 mt-1">
           {productName}
