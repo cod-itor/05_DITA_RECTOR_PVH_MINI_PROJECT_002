@@ -2,53 +2,126 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { StarRow } from "../../../../../components/ProductCardComponent";
-import { getProductById, products } from "../../../../../data/mockData";
-
-function getFallbackOptions(list, fallback) {
-  return Array.isArray(list) && list.length > 0 ? list : fallback;
-}
-
-function getNextProducts(currentProductId, count = 3) {
-  const currentIndex = products.findIndex(
-    (item) => item.productId === currentProductId,
-  );
-  if (currentIndex < 0) return products.slice(0, count);
-
-  const rotated = [
-    ...products.slice(currentIndex + 1),
-    ...products.slice(0, currentIndex),
-  ];
-  return rotated.slice(0, count);
-}
+import {
+  getProductByIdAction,
+  getProductsAction,
+} from "../../../../action/product.action";
 
 export default function Page() {
+  const { data: session, status } = useSession();
   const params = useParams();
-  const productId = Number(params?.id);
+  const productId = params?.id;
 
-  const product = useMemo(
-    () => getProductById(productId) ?? products[0],
-    [productId],
-  );
-
-  const colorOptions = getFallbackOptions(product?.colors, ["green", "gray"]);
-  const sizeOptions = getFallbackOptions(product?.sizes, ["s", "m", "l"]);
-  const nextProducts = useMemo(
-    () => getNextProducts(product?.productId, 3),
-    [product?.productId],
-  );
-
-  const [selectedColor, setSelectedColor] = useState(colorOptions[0]);
-  const [selectedSize, setSelectedSize] = useState(sizeOptions[0]);
+  const [product, setProduct] = useState(null);
+  const [allProducts, setAllProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [showCartMessage, setShowCartMessage] = useState(false);
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (status === "loading") return;
+
+    if (!session?.accessToken) {
+      setError("Please login to view product details");
+      setLoading(false);
+      return;
+    }
+
+    if (!productId) return;
+
+    let active = true;
+
+    const fetchData = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const [productData, productList] = await Promise.all([
+          getProductByIdAction(productId, session.accessToken),
+          getProductsAction(session.accessToken),
+        ]);
+
+        if (!active) return;
+
+        setProduct(productData);
+        setAllProducts(productList ?? []);
+        setShowCartMessage(false);
+      } catch (err) {
+        if (!active) return;
+        setError(err?.message || "Failed to load product");
+        setProduct(null);
+        setAllProducts([]);
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      active = false;
+    };
+  }, [productId, session?.accessToken, status]);
+
+  const colorOptions = product?.colors?.length
+    ? product.colors
+    : ["green", "gray"];
+  const sizeOptions = product?.sizes?.length ? product.sizes : ["s", "m", "l"];
+  const nextProducts = allProducts
+    .filter((item) => item.productId !== product?.productId)
+    .slice(0, 3);
+
+  useEffect(() => {
+    if (!product) return;
+    setSelectedColor(colorOptions[0] ?? "");
+    setSelectedSize(sizeOptions[0] ?? "");
+    setQuantity(1);
+  }, [product?.productId, colorOptions, sizeOptions]);
 
   const discountPrice = Number(product?.price ?? 0);
   const originalPrice = (discountPrice * 1.14).toFixed(2);
   const rating = Number.isFinite(Number(product?.star))
     ? Number(product?.star)
-    : 4;
+    : 0;
+
+  const handleAddToCart = () => {
+    setShowCartMessage(true);
+  };
+
+  if (loading) {
+    return (
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-gray-500">Loading product...</p>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </p>
+      </section>
+    );
+  }
+
+  if (!product) {
+    return (
+      <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <p className="text-sm text-gray-500">Product not found.</p>
+      </section>
+    );
+  }
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -143,6 +216,8 @@ export default function Page() {
             </p>
           </div>
 
+        
+
           <div className="mt-8">
             <p className="mb-3 text-lg font-semibold text-gray-800">
               Choose a color
@@ -199,6 +274,14 @@ export default function Page() {
           <p className="mt-8 text-xl leading-relaxed text-gray-600">
             {product?.description}
           </p>
+            {showCartMessage && (
+            <div className="mt-5 w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-base text-emerald-900">
+              Added to cart —{" "}
+              <Link href="/dashboard/cart" className="font-semibold underline">
+                view cart
+              </Link>
+            </div>
+          )}
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <div className="flex items-center rounded-full border border-gray-200 bg-white">
@@ -223,6 +306,7 @@ export default function Page() {
 
             <button
               type="button"
+              onClick={handleAddToCart}
               className="rounded-full bg-blue-950 px-12 py-3 text-lg font-semibold text-white transition hover:bg-blue-900"
             >
               🛍️ Add to cart
