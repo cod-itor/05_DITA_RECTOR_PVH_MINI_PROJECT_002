@@ -3,14 +3,24 @@
 import React, { useMemo, useState } from "react";
 import ProductCardEdit1 from "./ProductCardEditDisplay";
 import { getCategoryLabel } from "../../data/mockData";
+import FormCreateProduct from "./FormCreateProduct";
+import FormEditProduct from "./FormEditProduct";
+import FormDeleteProduct from "./FormDeleteProduct";
 
 export default function ProductCardEdit({
   initialItems = [],
   categoryList = [],
+  onCreateProduct,
+  onUpdateProduct,
+  onDeleteProduct,
 }) {
   const [openCreate, setOpenCreate] = useState(false);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
   const [sortBy, setSortBy] = useState("name");
   const [items, setItems] = useState(initialItems);
+  const [selectedProductId, setSelectedProductId] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
 
   const [form, setForm] = useState({
     productName: "",
@@ -50,8 +60,7 @@ export default function ProductCardEdit({
     });
   };
 
-  const closeModal = () => {
-    setOpenCreate(false);
+  const resetForm = () => {
     setForm({
       productName: "",
       price: "",
@@ -63,11 +72,26 @@ export default function ProductCardEdit({
     });
   };
 
-  const createProduct = () => {
+  const closeModal = () => {
+    setOpenCreate(false);
+    resetForm();
+  };
+
+  const closeEditModal = () => {
+    setOpenEdit(false);
+    setSelectedProductId(null);
+    resetForm();
+  };
+
+  const closeDeleteModal = () => {
+    setOpenDelete(false);
+    setProductToDelete(null);
+  };
+
+  const createProduct = async () => {
     if (!form.productName.trim() || !form.price) return;
 
-    const newProduct = {
-      productId: Date.now(),
+    const payload = {
       brand: "Custom",
       productName: form.productName.trim(),
       description: form.description.trim() || "Custom product",
@@ -78,8 +102,97 @@ export default function ProductCardEdit({
       sizes: form.sizes,
     };
 
+    if (onCreateProduct) {
+      const createdProduct = await onCreateProduct(payload);
+      if (createdProduct) {
+        setItems((prev) => [createdProduct, ...prev]);
+      }
+      closeModal();
+      return;
+    }
+
+    const newProduct = {
+      productId: Date.now(),
+      ...payload,
+    };
+
     setItems((prev) => [newProduct, ...prev]);
     closeModal();
+  };
+
+  const startEditProduct = (product) => {
+    setSelectedProductId(product.productId);
+    setForm({
+      productName: product.productName ?? "",
+      price: product.price ?? "",
+      categoryId: product.categoryId ?? categoryList[0]?.categoryId ?? 1,
+      imageUrl: product.imageUrl ?? "",
+      description: product.description ?? "",
+      colors: product.colors ?? [],
+      sizes: product.sizes ?? [],
+    });
+    setOpenEdit(true);
+  };
+
+  const saveEditProduct = async () => {
+    if (!selectedProductId || !form.productName.trim() || !form.price) return;
+
+    const payload = {
+      productId: selectedProductId,
+      productName: form.productName.trim(),
+      description: form.description.trim() || "Custom product",
+      price: Number(form.price),
+      categoryId: Number(form.categoryId),
+      imageUrl: form.imageUrl.trim() || null,
+      colors: form.colors,
+      sizes: form.sizes,
+    };
+
+    if (onUpdateProduct) {
+      const updatedProduct = await onUpdateProduct(payload);
+      if (updatedProduct) {
+        setItems((prev) =>
+          prev.map((item) =>
+            item.productId === selectedProductId ? updatedProduct : item,
+          ),
+        );
+      }
+      closeEditModal();
+      return;
+    }
+
+    setItems((prev) =>
+      prev.map((item) =>
+        item.productId === selectedProductId
+          ? {
+              ...item,
+              ...payload,
+            }
+          : item,
+      ),
+    );
+    closeEditModal();
+  };
+
+  const requestDeleteProduct = (product) => {
+    if (!product?.productId) return;
+    setProductToDelete(product);
+    setOpenDelete(true);
+  };
+
+  const deleteProduct = async () => {
+    if (!productToDelete?.productId) return;
+
+    if (onDeleteProduct) {
+      const success = await onDeleteProduct(productToDelete);
+      if (!success) return;
+    }
+
+    setItems((prev) =>
+      prev.filter((item) => item.productId !== productToDelete.productId),
+    );
+
+    closeDeleteModal();
   };
 
   return (
@@ -119,178 +232,41 @@ export default function ProductCardEdit({
               categoryLabel={getCategoryLabel(product.categoryId)}
               href={`/dashboard/products/${product.productId}`}
               rating={product.rating ?? 4}
+              onEdit={startEditProduct}
+              onDelete={requestDeleteProduct}
             />
           ))}
         </div>
       </div>
 
       {openCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-3xl rounded-2xl bg-white shadow-xl">
-            <div className="flex items-start justify-between border-b border-gray-100 px-6 py-5">
-              <div>
-                <h3 className="text-3xl font-semibold text-gray-900">
-                  Create product
-                </h3>
-                <p className="mt-1 text-base text-gray-500">
-                  Demo CRUD only (local state). Refresh resets changes.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 text-xl text-gray-500"
-              >
-                ×
-              </button>
-            </div>
+        <FormCreateProduct
+          form={form}
+          categoryList={categoryList}
+          updateField={updateField}
+          toggleToken={toggleToken}
+          onClose={closeModal}
+          onSubmit={createProduct}
+        />
+      )}
 
-            <div className="space-y-4 px-6 py-5">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <input
-                    value={form.productName}
-                    onChange={(event) =>
-                      updateField("productName", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-lime-400"
-                    placeholder="Kérastase"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Price
-                  </label>
-                  <input
-                    type="number"
-                    value={form.price}
-                    onChange={(event) =>
-                      updateField("price", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-lime-400"
-                    placeholder="64.00"
-                  />
-                </div>
-              </div>
+      {openEdit && (
+        <FormEditProduct
+          form={form}
+          categoryList={categoryList}
+          updateField={updateField}
+          toggleToken={toggleToken}
+          onClose={closeEditModal}
+          onSubmit={saveEditProduct}
+        />
+      )}
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Category
-                  </label>
-                  <select
-                    value={form.categoryId}
-                    onChange={(event) =>
-                      updateField("categoryId", Number(event.target.value))
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-lime-400"
-                  >
-                    {categoryList.map((category) => (
-                      <option
-                        key={category.categoryId}
-                        value={category.categoryId}
-                      >
-                        {category.categoryName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-gray-700">
-                    Image URL (optional)
-                  </label>
-                  <input
-                    value={form.imageUrl}
-                    onChange={(event) =>
-                      updateField("imageUrl", event.target.value)
-                    }
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-lime-400"
-                    placeholder="https://..."
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Colors
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {["green", "gray", "red", "blue", "white"].map((color) => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => toggleToken("colors", color)}
-                      className={`rounded-full border px-3 py-1.5 text-sm ${
-                        form.colors.includes(color)
-                          ? "border-lime-500 bg-lime-50 text-lime-700"
-                          : "border-gray-200 text-gray-600"
-                      }`}
-                    >
-                      {color}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  Sizes
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {["s", "m", "l", "xl", "xxl", "xxxl"].map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => toggleToken("sizes", size)}
-                      className={`rounded-full border px-3 py-1.5 text-sm ${
-                        form.sizes.includes(size)
-                          ? "border-lime-500 bg-lime-50 text-lime-700"
-                          : "border-gray-200 text-gray-600"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">
-                  Description
-                </label>
-                <textarea
-                  value={form.description}
-                  onChange={(event) =>
-                    updateField("description", event.target.value)
-                  }
-                  rows={4}
-                  className="w-full resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm outline-none focus:border-lime-400"
-                  placeholder="The best relaxed hair products you need now..."
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-              <button
-                type="button"
-                onClick={closeModal}
-                className="rounded-full border border-gray-200 px-6 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={createProduct}
-                className="rounded-full bg-lime-400 px-6 py-2.5 text-sm font-semibold text-gray-900 transition hover:bg-lime-300"
-              >
-                Create product
-              </button>
-            </div>
-          </div>
-        </div>
+      {openDelete && (
+        <FormDeleteProduct
+          productName={productToDelete?.productName ?? "this product"}
+          onClose={closeDeleteModal}
+          onDelete={deleteProduct}
+        />
       )}
     </>
   );

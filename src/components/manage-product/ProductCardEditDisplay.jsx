@@ -1,41 +1,77 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { StarRow } from "../ProductCardComponent";
-
-const categoryTone = {
-  Skincare: "bg-sky-50 text-sky-800",
-  Makeup: "bg-violet-50 text-violet-800",
-  Fragrance: "bg-amber-50 text-amber-900",
-  Haircare: "bg-emerald-50 text-emerald-900",
-};
-
-function badgeClass(label) {
-  return categoryTone[label] ?? "bg-indigo-50 text-indigo-800";
-}
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 
 export default function ProductCardEdit1({
   product,
   categoryLabel,
   href,
   rating = 4,
+  onEdit,
+  onDelete,
 }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
   const productName = product?.productName ?? "Product";
   const price = product?.price ?? 0;
   const imageUrl = product?.imageUrl;
-  void categoryLabel;
-  void href;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <article className="group relative flex w-full max-w-70 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-      {/* Top Right Options Button */}
-      <button
-        type="button"
-        className="absolute right-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 shadow-sm transition hover:bg-gray-50"
-      >
-        ⋯
-      </button>
+      {/* Options Menu Container */}
+      <div className="absolute right-4 top-4 z-20" ref={dropdownRef}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+          className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white/80 text-gray-500 shadow-sm backdrop-blur-sm transition hover:bg-gray-50 hover:text-gray-900"
+        >
+          <MoreHorizontal size={18} />
+        </button>
 
-      {/* Product Image */}
+        {/* Dropdown Pop-up */}
+        {isOpen && (
+          <div className="absolute right-0 mt-2 w-36 overflow-hidden rounded-xl border border-gray-100 bg-white/90 p-1 shadow-xl backdrop-blur-md animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onEdit?.(product);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-700 transition hover:bg-gray-100"
+            >
+              <Pencil size={14} />
+              <span>Edit</span>
+            </button>
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                onDelete?.(product);
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-red-600 transition hover:bg-red-50"
+            >
+              <Trash2 size={14} />
+              <span>Delete</span>
+            </button>
+          </div>
+          
+        )}
+      </div>
+
       <div className="relative aspect-square w-full overflow-hidden mb-2">
         {imageUrl ? (
           <Image
@@ -52,10 +88,7 @@ export default function ProductCardEdit1({
         )}
       </div>
 
-      {/* Product Details (Simplified to match image) */}
       <div className="flex flex-col gap-1 pr-12">
-        {" "}
-        {/* pr-12 prevents text from overlapping the + button */}
         <div className="flex items-center gap-1.5 text-sm text-gray-500">
           <StarRow rating={rating} />
           <span className="text-xs font-medium">{rating}</span>
@@ -68,7 +101,6 @@ export default function ProductCardEdit1({
         </p>
       </div>
 
-      {/* Bottom Right Add Button */}
       <button
         type="button"
         className="absolute bottom-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-lime-400 text-2xl font-light leading-none text-gray-900 transition hover:bg-lime-500"
