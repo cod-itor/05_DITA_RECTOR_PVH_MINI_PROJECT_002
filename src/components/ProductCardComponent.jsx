@@ -6,19 +6,28 @@ import ButtonAddComponent from "./ButtonAddComponent";
 
 export function StarRow({ rating = 4.8 }) {
   const numericRating = Number(rating);
-  const safeRating = Number.isFinite(numericRating) && numericRating > 0 ? numericRating : 0;
+  const safeRating =
+    Number.isFinite(numericRating) && numericRating > 0 ? numericRating : 0;
   const filledStars = Math.max(0, Math.min(5, Math.round(safeRating)));
 
   return (
-    <p className="flex items-center gap-0.5 text-amber-400" aria-label={`${safeRating} stars`}>
+    <p
+      className="flex items-center gap-0.5 text-amber-400"
+      aria-label={`${safeRating} stars`}
+    >
       <span className="text-sm" aria-hidden>
         {[...Array(5)].map((_, index) => (
-          <span key={index} className={index < filledStars ? "text-amber-400" : "text-gray-300"}>
+          <span
+            key={index}
+            className={index < filledStars ? "text-amber-400" : "text-gray-300"}
+          >
             ★
           </span>
         ))}
       </span>
-      <span className="ml-1 text-xs tabular-nums text-gray-500">{safeRating}</span>
+      <span className="ml-1 text-xs tabular-nums text-gray-500">
+        {safeRating}
+      </span>
     </p>
   );
 }
@@ -52,7 +61,9 @@ export default function ProductCardComponent({ product }) {
             {productName}
           </h3>
         </Link>
-        <p className="mt-2 text-base font-semibold tabular-nums text-gray-900">${price}</p>
+        <p className="mt-2 text-base font-semibold tabular-nums text-gray-900">
+          ${price}
+        </p>
       </div>
       <div className="absolute bottom-4 right-4">
         <ButtonAddComponent productId={productId} />

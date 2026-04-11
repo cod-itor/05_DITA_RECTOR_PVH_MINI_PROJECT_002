@@ -57,7 +57,7 @@ export default function ShopCardComponent({
             {description}
           </p>
         </div>
-  <StarRow rating={displayRating} />
+        <StarRow rating={displayRating} />
         <div className="mt-auto flex flex-wrap items-end justify-between gap-3 pt-2">
           <p className="text-xl font-semibold tabular-nums text-gray-900">
             ${price}
