@@ -1,21 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@heroui/react";
-import {
-  essentialsTabs,
-  filterProductsByEssentialsTab,
-  products,
-} from "../../data/mockData";
 import ProductCardComponent from "../ProductCardComponent";
 
 const pageSize = 8;
+const allTab = { categoryId: "ALL", categoryName: "All" };
 
-export default function LandingEssentialsGrid() {
-  const [tab, setTab] = useState("All");
+export default function LandingEssentialsGrid({
+  items = [],
+  categoryList = [],
+}) {
+  const [tab, setTab] = useState(allTab.categoryId);
   const [showAll, setShowAll] = useState(false);
 
-  const filtered = filterProductsByEssentialsTab(products, tab);
+  const tabs = useMemo(() => {
+    const fromCategories = Array.isArray(categoryList)
+      ? categoryList
+          .filter((item) => item?.categoryId)
+          .map((item) => ({
+            categoryId: String(item.categoryId),
+            categoryName: item.categoryName ?? "Category",
+          }))
+      : [];
+
+    if (fromCategories.length > 0) {
+      return [allTab, ...fromCategories];
+    }
+
+    const categoryMap = new Map();
+    items.forEach((product) => {
+      if (!product?.categoryId || categoryMap.has(product.categoryId)) return;
+      categoryMap.set(product.categoryId, {
+        categoryId: String(product.categoryId),
+        categoryName: product.categoryName ?? "Category",
+      });
+    });
+
+    return [allTab, ...categoryMap.values()];
+  }, [categoryList, items]);
+
+  const filtered = useMemo(() => {
+    if (tab === allTab.categoryId) return items;
+    return items.filter((product) => String(product?.categoryId) === tab);
+  }, [items, tab]);
+
   const visible = showAll ? filtered : filtered.slice(0, pageSize);
   const canLoadMore = !showAll && filtered.length > pageSize;
 
@@ -26,8 +55,7 @@ export default function LandingEssentialsGrid() {
           Our skincare essentials
         </h2>
         <p className="mt-2 max-w-lg text-gray-500">
-          Filter by routine step — same mock catalog, organized for quick
-          discovery.
+          Filter by category to discover products faster.
         </p>
       </div>
 
@@ -36,15 +64,15 @@ export default function LandingEssentialsGrid() {
         role="tablist"
         aria-label="Product categories"
       >
-        {essentialsTabs.map((label) => {
-          const on = tab === label;
+        {tabs.map((item) => {
+          const on = tab === item.categoryId;
           return (
             <Button
-              key={label}
+              key={item.categoryId}
               role="tab"
               aria-selected={on}
               onPress={() => {
-                setTab(label);
+                setTab(item.categoryId);
                 setShowAll(false);
               }}
               className={`rounded-full px-5 py-2.5 text-sm font-medium transition ${
@@ -53,21 +81,21 @@ export default function LandingEssentialsGrid() {
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
-              {label}
+              {item.categoryName}
             </Button>
           );
         })}
       </div>
 
       <div className="mt-12 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-        {visible.map((product, index) => (
-          <ProductCardComponent product={product} key={index} />
+        {visible.map((product) => (
+          <ProductCardComponent product={product} key={product?.productId} />
         ))}
       </div>
 
       {filtered.length === 0 && (
         <p className="mt-12 text-center text-gray-500">
-          No products in this tab — try “All”.
+          No products in this category — try "All".
         </p>
       )}
 

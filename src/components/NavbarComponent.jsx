@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@heroui/react";
 import { useSession, signOut } from "next-auth/react";
-// import { useCart } from "@/store/cartStore";
 
 const centerLinks = [
   { href: "/", label: "Home" },
@@ -65,14 +64,10 @@ export default function NavbarComponent() {
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const { data: session, status } = useSession();
-  //   const { totalQuantity } = useCart();
 
   const userLabel = session?.user?.name || session?.user?.email || "User";
   const userInitial = userLabel.trim().charAt(0).toUpperCase();
   const isAuthenticated = status === "authenticated";
-
-  //   const cartLabel =
-  //     totalQuantity > 0 ? `Shopping cart, ${totalQuantity} items` : "Shopping cart";
 
   const linkClass = (active) =>
     `relative flex items-center rounded-full px-3 py-2 text-sm font-medium transition ${
@@ -116,65 +111,59 @@ export default function NavbarComponent() {
         </nav>
 
         <div className="z-10 flex items-center gap-2 sm:gap-3">
-          <div className="relative hidden sm:flex">
-            <button
-              type="button"
-              title={isAuthenticated ? userLabel : "Account"}
-              onClick={() => setProfileOpen((v) => !v)}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-900 transition hover:border-lime-300 hover:bg-lime-50"
-            >
-              {userInitial || "U"}
-            </button>
+          {isAuthenticated ? (
+            <div className="relative hidden sm:flex">
+              <button
+                type="button"
+                title={userLabel}
+                onClick={() => setProfileOpen((v) => !v)}
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-sm font-semibold text-gray-900 transition hover:border-lime-300 hover:bg-lime-50"
+              >
+                {userInitial || "U"}
+              </button>
 
-            {profileOpen && (
-              <div className="absolute right-0 top-12 z-50 w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-lg">
-                {isAuthenticated ? (
-                  <>
-                    <div
-                      title={userLabel}
-                      className="px-3 py-2 text-xs text-gray-500"
-                    >
-                      Signed in as
-                      <div className="mt-0.5 truncate text-sm font-medium text-gray-900">
-                        {userLabel}
-                      </div>
+              {profileOpen && (
+                <div className="absolute right-0 top-12 z-50 w-44 rounded-xl border border-gray-200 bg-white p-1 shadow-lg">
+                  <div
+                    title={userLabel}
+                    className="px-3 py-2 text-xs text-gray-500"
+                  >
+                    Signed in as
+                    <div className="mt-0.5 truncate text-sm font-medium text-gray-900">
+                      {userLabel}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProfileOpen(false);
-                        signOut({ callbackUrl: "/login" });
-                      }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/login"
-                      onClick={() => setProfileOpen(false)}
-                      className="block rounded-lg px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                    >
-                      Log in
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={() => setProfileOpen(false)}
-                      className="block rounded-lg px-3 py-2 text-sm font-medium text-lime-800 transition hover:bg-lime-50"
-                    >
-                      Register
-                    </Link>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      signOut({ callbackUrl: "/login" });
+                    }}
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="hidden items-center gap-2 sm:flex">
+              <Link
+                href="/login"
+                className={authLinkClass(pathname, "/login", false)}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/register"
+                className={authLinkClass(pathname, "/register", true)}
+              >
+                Register
+              </Link>
+            </div>
+          )}
           <Link
             href="/dashboard/cart"
-            // aria-label={cartLabel}
-            // title={cartLabel}
             className={`relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
               pathname === "/dashboard/cart"
                 ? "border-lime-500 bg-lime-400 text-gray-900"
@@ -182,14 +171,6 @@ export default function NavbarComponent() {
             }`}
           >
             <CartBagIcon className="size-5" />
-            {/* <span
-              className={`absolute -right-0.5 -top-0.5 flex min-h-4.5 min-w-4.5 items-center justify-center rounded-full bg-teal-900 px-1 text-[10px] font-semibold leading-none text-lime-300 tabular-nums transition-opacity ${
-                totalQuantity > 0 ? "opacity-100" : "pointer-events-none opacity-0"
-              }`}
-              aria-hidden
-            >
-              {totalQuantity > 99 ? "99+" : totalQuantity}
-            </span> */}
           </Link>
 
           <Button
@@ -259,7 +240,7 @@ export default function NavbarComponent() {
               onClick={() => setOpen(false)}
               className="rounded-xl px-3 py-3 text-sm font-medium text-gray-700 hover:bg-gray-100"
             >
-              {/* Cart {totalQuantity > 0 ? `(${totalQuantity})` : ""} */}
+              Cart
             </Link>
           </div>
         </div>

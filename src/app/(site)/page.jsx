@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 
 import { categories, products } from "../../data/mockData";
 import {
+  getCategoriesAction,
+  getProductsAction,
   getTopSellingMiniProductsAction,
   getTopSellingProductsAction,
 } from "../action/product.action";
@@ -15,6 +17,11 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
   let heroStrip = products.slice(0, 3);
   let bestSellers = products.slice(0, 4);
+  let essentialItems = products;
+  let essentialCategories = categories.map((category) => ({
+    categoryId: String(category.categoryId),
+    categoryName: category.categoryName,
+  }));
 
   try {
     const topSellingMini = await getTopSellingMiniProductsAction(
@@ -36,11 +43,35 @@ export default async function Home() {
     bestSellers = products.slice(0, 4);
   }
 
+  try {
+    const list = await getProductsAction(session?.accessToken);
+    if (Array.isArray(list) && list.length > 0) {
+      essentialItems = list;
+    }
+  } catch {
+    essentialItems = products;
+  }
+
+  try {
+    const categoryList = await getCategoriesAction(session?.accessToken);
+    if (Array.isArray(categoryList) && categoryList.length > 0) {
+      essentialCategories = categoryList;
+    }
+  } catch {
+    essentialCategories = categories.map((category) => ({
+      categoryId: String(category.categoryId),
+      categoryName: category.categoryName,
+    }));
+  }
+
   return (
     <div className="bg-[#fafafa]">
       <LandingHeroSectionComponent miniProducts={heroStrip} />
       <LandingBestSellerSectionComponent items={bestSellers} />
-      <LandingEssentialComponent />
+      <LandingEssentialComponent
+        items={essentialItems}
+        categoryList={essentialCategories}
+      />
 
       <section className="mx-auto w-full max-w-7xl py-16 lg:py-20">
         <div className="grid gap-4 md:grid-cols-3">

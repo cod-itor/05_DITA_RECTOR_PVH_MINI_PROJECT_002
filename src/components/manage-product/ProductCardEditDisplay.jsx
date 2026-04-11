@@ -65,7 +65,6 @@ export default function ProductCardEdit1({
               <span>Delete</span>
             </button>
           </div>
-          
         )}
       </div>
 
