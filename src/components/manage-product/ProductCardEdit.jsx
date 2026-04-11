@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState } from "react";
 import ProductCardEdit1 from "./ProductCardEditDisplay";
-import { getCategoryLabel } from "../../data/mockData";
 import FormCreateProduct from "./FormCreateProduct";
 import FormEditProduct from "./FormEditProduct";
 import FormDeleteProduct from "./FormDeleteProduct";
@@ -229,7 +228,7 @@ export default function ProductCardEdit({
             <ProductCardEdit1
               key={product.productId}
               product={product}
-              categoryLabel={getCategoryLabel(product.categoryId)}
+              categoryLabel={product.categoryName ?? "Category"}
               href={`/dashboard/products/${product.productId}`}
               rating={product.rating ?? 4}
               onEdit={startEditProduct}
