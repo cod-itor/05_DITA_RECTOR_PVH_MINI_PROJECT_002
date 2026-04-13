@@ -7,6 +7,14 @@ import { Button } from "@heroui/react";
 import { useForm } from "react-hook-form";
 import { sileo } from "sileo";
 
+const sileoBlackTheme = {
+  fill: "black",
+  styles: {
+    title: "text-white!",
+    description: "text-white/75!",
+  },
+};
+
 export default function LoginFormComponent() {
   const [submitError, setSubmitError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -61,6 +69,7 @@ export default function LoginFormComponent() {
           title: "Login failed",
           description: errorMessage,
           position: "top-center",
+          ...sileoBlackTheme,
         });
         console.error("Login error details:", rawError);
       } else if (result?.ok || !rawError) {
@@ -68,6 +77,7 @@ export default function LoginFormComponent() {
           title: "Login successful",
           description: "Welcome back to PurelyStore",
           position: "top-center",
+          ...sileoBlackTheme,
         });
         router.replace("/");
         router.refresh();
@@ -81,6 +91,7 @@ export default function LoginFormComponent() {
         title: "Login failed",
         description: message,
         position: "top-center",
+        ...sileoBlackTheme,
       });
     } finally {
       setIsLoading(false);

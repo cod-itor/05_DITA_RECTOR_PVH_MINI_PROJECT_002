@@ -15,6 +15,14 @@ import {
 } from "../../../../lib/cart.storage";
 import { sileo } from "sileo";
 
+const sileoBlackTheme = {
+  fill: "black",
+  styles: {
+    title: "text-white!",
+    description: "text-white/75!",
+  },
+};
+
 export default function CartPage() {
   const { data: session, status } = useSession();
   const [orderDetailRequests, setOrderDetailRequests] = useState([]);
@@ -100,14 +108,22 @@ export default function CartPage() {
     if (orderDetailRequests.length === 0) {
       const message = "Your cart is empty";
       setCheckoutError(message);
-      sileo.error({ title: "Checkout failed", description: message });
+      sileo.error({
+        title: "Checkout failed",
+        description: message,
+        ...sileoBlackTheme,
+      });
       return;
     }
 
     if (!session?.accessToken) {
       const message = "Please login before checkout";
       setCheckoutError(message);
-      sileo.error({ title: "Checkout failed", description: message });
+      sileo.error({
+        title: "Checkout failed",
+        description: message,
+        ...sileoBlackTheme,
+      });
       return;
     }
 
@@ -124,11 +140,16 @@ export default function CartPage() {
       sileo.success({
         title: "Order successful",
         description: "Your order has been placed.",
+        ...sileoBlackTheme,
       });
     } catch (error) {
       const message = error?.message || "Failed to checkout";
       setCheckoutError(message);
-      sileo.error({ title: "Checkout failed", description: message });
+      sileo.error({
+        title: "Checkout failed",
+        description: message,
+        ...sileoBlackTheme,
+      });
     } finally {
       setIsCheckingOut(false);
     }

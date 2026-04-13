@@ -7,6 +7,14 @@ import { useForm } from "react-hook-form";
 import { registerUserAction } from "../../../app/action/auth.action";
 import { sileo } from "sileo";
 
+const sileoBlackTheme = {
+  fill: "black",
+  styles: {
+    title: "text-white!",
+    description: "text-white/75!",
+  },
+};
+
 export default function RegisterFormComponent() {
   const [submitError, setSubmitError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +51,8 @@ export default function RegisterFormComponent() {
         sileo.success({
           title: "Registration successful",
           description: "Your account is ready. Please log in.",
-           position: "top-center",
+          position: "top-center",
+          ...sileoBlackTheme,
         });
         router.push("/login?registered=true");
       } else {
@@ -53,7 +62,8 @@ export default function RegisterFormComponent() {
         sileo.error({
           title: "Registration failed",
           description: message,
-           position: "top-center",
+          position: "top-center",
+          ...sileoBlackTheme,
         });
       }
     } catch (error) {
@@ -62,7 +72,8 @@ export default function RegisterFormComponent() {
       sileo.error({
         title: "Registration failed",
         description: message,
-         position: "top-center",
+        position: "top-center",
+        ...sileoBlackTheme,
       });
     } finally {
       setIsLoading(false);
