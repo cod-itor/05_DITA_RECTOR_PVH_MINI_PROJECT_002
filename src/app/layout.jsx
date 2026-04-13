@@ -1,5 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import "sileo/styles.css";
+import { Toaster } from "sileo";
 import Provider from "./provider";
 
 const geistSans = Geist({
@@ -25,9 +27,17 @@ export default function RootLayout({ children }) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#fafafa] text-gray-900">
-        <Provider>
-          {children}
-        </Provider>
+        <Toaster
+          position="top-right"
+          options={{
+            fill: "black",
+            styles: {
+              title: "text-white!",
+              description: "text-white/75!",
+            },
+          }}
+        />
+        <Provider>{children}</Provider>
       </body>
     </html>
   );

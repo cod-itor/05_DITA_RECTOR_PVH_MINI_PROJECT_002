@@ -12,6 +12,15 @@ import {
   rateProductAction,
 } from "../../../../action/product.action";
 import { addProductToCartStorage } from "../../../../../lib/cart.storage";
+import { sileo } from "sileo";
+
+const sileoBlackTheme = {
+  fill: "black",
+  styles: {
+    title: "text-white!",
+    description: "text-white/75!",
+  },
+};
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -108,7 +117,13 @@ export default function Page() {
     if (ratingPending) return;
 
     if (!session?.accessToken) {
-      setRatingError("Access token is required");
+      const message = "Access token is required";
+      setRatingError(message);
+      sileo.error({
+        title: "Rating failed",
+        description: message,
+        ...sileoBlackTheme,
+      });
       return;
     }
 
@@ -132,9 +147,20 @@ export default function Page() {
 
       setDisplayRating(safeStar);
       setProduct((prev) => (prev ? { ...prev, star: safeStar } : prev));
+      sileo.success({
+        title: "Rating submitted",
+        description: `You rated this product ${safeStar} star${safeStar > 1 ? "s" : ""}.`,
+        ...sileoBlackTheme,
+      });
     } catch (err) {
       setDisplayRating(previousRating);
-      setRatingError(err?.message || "Failed to submit rating");
+      const message = err?.message || "Failed to submit rating";
+      setRatingError(message);
+      sileo.error({
+        title: "Rating failed",
+        description: message,
+        ...sileoBlackTheme,
+      });
     } finally {
       setRatingPending(false);
     }
@@ -145,7 +171,13 @@ export default function Page() {
   const handleAddToCart = () => {
     if (!product?.productId) return;
     addProductToCartStorage(product.productId, quantity);
+    const safeProductName = product.productName?.trim() || "Product";
     setShowCartMessage(true);
+    sileo.success({
+      title: "Added to cart",
+      description: `${safeProductName} added to cart (${quantity} item${quantity > 1 ? "s" : ""}).`,
+      ...sileoBlackTheme,
+    });
   };
 
   if (loading) {

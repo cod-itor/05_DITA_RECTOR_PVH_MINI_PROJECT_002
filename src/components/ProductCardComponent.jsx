@@ -63,7 +63,7 @@ export default function ProductCardComponent({ product }) {
 
   return (
     <article className="group relative rounded-2xl border border-gray-100 bg-white p-4 shadow-sm transition hover:shadow-md">
-      <Link href={`/products/${productId}`} className="block">
+      <Link href={`/dashboard/products/${productId}`} className="block">
         <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-100">
           <Image
             src={resolvedImageSrc}
@@ -77,7 +77,7 @@ export default function ProductCardComponent({ product }) {
       </Link>
       <div className="relative mt-4 pr-14">
         <StarRow rating={star} />
-        <Link href={`/products/${productId}`}>
+        <Link href={`/dashboard/products/${productId}`}>
           <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-gray-900 hover:text-lime-700">
             {productName}
           </h3>
@@ -87,7 +87,7 @@ export default function ProductCardComponent({ product }) {
         </p>
       </div>
       <div className="absolute bottom-4 right-4">
-        <ButtonAddComponent productId={productId} />
+        <ButtonAddComponent productId={productId} productName={productName} />
       </div>
     </article>
   );

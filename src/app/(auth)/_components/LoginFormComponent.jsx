@@ -5,6 +5,15 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import { useForm } from "react-hook-form";
+import { sileo } from "sileo";
+
+const sileoBlackTheme = {
+  fill: "black",
+  styles: {
+    title: "text-white!",
+    description: "text-white/75!",
+  },
+};
 
 export default function LoginFormComponent() {
   const [submitError, setSubmitError] = useState("");
@@ -56,16 +65,34 @@ export default function LoginFormComponent() {
         }
 
         setSubmitError(errorMessage);
+        sileo.error({
+          title: "Login failed",
+          description: errorMessage,
+          position: "top-center",
+          ...sileoBlackTheme,
+        });
         console.error("Login error details:", rawError);
       } else if (result?.ok || !rawError) {
+        sileo.success({
+          title: "Login successful",
+          description: "Welcome back to PurelyStore",
+          position: "top-center",
+          ...sileoBlackTheme,
+        });
         router.replace("/");
         router.refresh();
       }
     } catch (error) {
       console.error("Login exception:", error);
-      setSubmitError(
-        error.message || "An unexpected error occurred during login",
-      );
+      const message =
+        error.message || "An unexpected error occurred during login";
+      setSubmitError(message);
+      sileo.error({
+        title: "Login failed",
+        description: message,
+        position: "top-center",
+        ...sileoBlackTheme,
+      });
     } finally {
       setIsLoading(false);
     }
