@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@heroui/react";
 import { useForm } from "react-hook-form";
 import { registerUserAction } from "../../../app/action/auth.action";
+import { sileo } from "sileo";
 
 export default function RegisterFormComponent() {
   const [submitError, setSubmitError] = useState("");
@@ -39,14 +40,30 @@ export default function RegisterFormComponent() {
       });
 
       if (result.success) {
+        sileo.success({
+          title: "Registration successful",
+          description: "Your account is ready. Please log in.",
+           position: "top-center",
+        });
         router.push("/login?registered=true");
       } else {
-        setSubmitError(
-          result.message || "Registration failed. Please try again.",
-        );
+        const message =
+          result.message || "Registration failed. Please try again.";
+        setSubmitError(message);
+        sileo.error({
+          title: "Registration failed",
+          description: message,
+           position: "top-center",
+        });
       }
     } catch (error) {
-      setSubmitError(error.message || "An unexpected error occurred");
+      const message = error.message || "An unexpected error occurred";
+      setSubmitError(message);
+      sileo.error({
+        title: "Registration failed",
+        description: message,
+         position: "top-center",
+      });
     } finally {
       setIsLoading(false);
     }

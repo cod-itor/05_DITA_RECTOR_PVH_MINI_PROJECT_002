@@ -12,6 +12,7 @@ import {
   rateProductAction,
 } from "../../../../action/product.action";
 import { addProductToCartStorage } from "../../../../../lib/cart.storage";
+import { sileo } from "sileo";
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -108,7 +109,9 @@ export default function Page() {
     if (ratingPending) return;
 
     if (!session?.accessToken) {
-      setRatingError("Access token is required");
+      const message = "Access token is required";
+      setRatingError(message);
+      sileo.error({ title: "Rating failed", description: message });
       return;
     }
 
@@ -132,9 +135,15 @@ export default function Page() {
 
       setDisplayRating(safeStar);
       setProduct((prev) => (prev ? { ...prev, star: safeStar } : prev));
+      sileo.success({
+        title: "Rating submitted",
+        description: `You rated this product ${safeStar} star${safeStar > 1 ? "s" : ""}.`,
+      });
     } catch (err) {
       setDisplayRating(previousRating);
-      setRatingError(err?.message || "Failed to submit rating");
+      const message = err?.message || "Failed to submit rating";
+      setRatingError(message);
+      sileo.error({ title: "Rating failed", description: message });
     } finally {
       setRatingPending(false);
     }
@@ -146,6 +155,10 @@ export default function Page() {
     if (!product?.productId) return;
     addProductToCartStorage(product.productId, quantity);
     setShowCartMessage(true);
+    sileo.success({
+      title: "Added to cart",
+      description: `${quantity} item${quantity > 1 ? "s" : ""} added to your cart.`,
+    });
   };
 
   if (loading) {

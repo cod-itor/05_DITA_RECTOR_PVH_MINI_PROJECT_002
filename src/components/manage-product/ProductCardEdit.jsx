@@ -11,6 +11,7 @@ import {
   deleteProductAction,
   updateProductAction,
 } from "../../app/action/product.action";
+import { sileo } from "sileo";
 
 export default function ProductCardEdit({
   initialItems = [],
@@ -119,6 +120,10 @@ export default function ProductCardEdit({
         if (createdProduct) {
           setItems((prev) => [createdProduct, ...prev]);
         }
+        sileo.success({
+          title: "Product created",
+          description: "New product has been added successfully.",
+        });
         closeModal();
         return;
       }
@@ -133,9 +138,15 @@ export default function ProductCardEdit({
       );
 
       setItems((prev) => [createdProduct, ...prev]);
+      sileo.success({
+        title: "Product created",
+        description: "New product has been added successfully.",
+      });
       closeModal();
     } catch (error) {
-      setActionError(error?.message || "Failed to create product");
+      const message = error?.message || "Failed to create product";
+      setActionError(message);
+      sileo.error({ title: "Create failed", description: message });
     }
   };
 
@@ -172,8 +183,6 @@ export default function ProductCardEdit({
       categoryId: String(form.categoryId),
     };
 
-    console.log("Edit product request body:", requestBody);
-
     const selectedCategoryName =
       categoryList.find(
         (category) => category.categoryId === requestBody.categoryId,
@@ -201,6 +210,10 @@ export default function ProductCardEdit({
             ),
           );
         }
+        sileo.success({
+          title: "Product updated",
+          description: "Product changes saved successfully.",
+        });
         closeEditModal();
         return;
       }
@@ -228,9 +241,15 @@ export default function ProductCardEdit({
         ),
       );
 
+      sileo.success({
+        title: "Product updated",
+        description: "Product changes saved successfully.",
+      });
       closeEditModal();
     } catch (error) {
-      setActionError(error?.message || "Failed to update product");
+      const message = error?.message || "Failed to update product";
+      setActionError(message);
+      sileo.error({ title: "Update failed", description: message });
     }
   };
 
@@ -265,9 +284,15 @@ export default function ProductCardEdit({
         prev.filter((item) => item.productId !== productToDelete.productId),
       );
 
+      sileo.success({
+        title: "Product deleted",
+        description: "Product was removed successfully.",
+      });
       closeDeleteModal();
     } catch (error) {
-      setActionError(error?.message || "Failed to delete product");
+      const message = error?.message || "Failed to delete product";
+      setActionError(message);
+      sileo.error({ title: "Delete failed", description: message });
     }
   };
 

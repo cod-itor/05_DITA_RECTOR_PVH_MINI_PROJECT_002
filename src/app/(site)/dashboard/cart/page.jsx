@@ -13,6 +13,7 @@ import {
   removeProductFromCartStorage,
   setProductQtyInCartStorage,
 } from "../../../../lib/cart.storage";
+import { sileo } from "sileo";
 
 export default function CartPage() {
   const { data: session, status } = useSession();
@@ -97,12 +98,16 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (orderDetailRequests.length === 0) {
-      setCheckoutError("Your cart is empty");
+      const message = "Your cart is empty";
+      setCheckoutError(message);
+      sileo.error({ title: "Checkout failed", description: message });
       return;
     }
 
     if (!session?.accessToken) {
-      setCheckoutError("Please login before checkout");
+      const message = "Please login before checkout";
+      setCheckoutError(message);
+      sileo.error({ title: "Checkout failed", description: message });
       return;
     }
 
@@ -116,8 +121,14 @@ export default function CartPage() {
       clearCartStorage();
       refreshCart();
       setCheckoutSuccess("Checkout successful");
+      sileo.success({
+        title: "Order successful",
+        description: "Your order has been placed.",
+      });
     } catch (error) {
-      setCheckoutError(error?.message || "Failed to checkout");
+      const message = error?.message || "Failed to checkout";
+      setCheckoutError(message);
+      sileo.error({ title: "Checkout failed", description: message });
     } finally {
       setIsCheckingOut(false);
     }

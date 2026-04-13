@@ -28,3 +28,7 @@ body {
   color: var(--color-black);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+[data-sileo-viewport] {
+  z-index: 9999 !important;
+}
