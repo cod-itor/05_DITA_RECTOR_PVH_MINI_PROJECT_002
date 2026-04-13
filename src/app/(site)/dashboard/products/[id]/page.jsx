@@ -171,10 +171,11 @@ export default function Page() {
   const handleAddToCart = () => {
     if (!product?.productId) return;
     addProductToCartStorage(product.productId, quantity);
+    const safeProductName = product.productName?.trim() || "Product";
     setShowCartMessage(true);
     sileo.success({
       title: "Added to cart",
-      description: `${quantity} item${quantity > 1 ? "s" : ""} added to your cart.`,
+      description: `${safeProductName} added to cart (${quantity} item${quantity > 1 ? "s" : ""}).`,
       ...sileoBlackTheme,
     });
   };

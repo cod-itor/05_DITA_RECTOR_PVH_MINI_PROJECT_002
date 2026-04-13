@@ -46,7 +46,7 @@ export default function LandingHeroSectionComponent({ miniProducts }) {
             and a routine you will actually enjoy.
           </p>
           <Link
-            href="/products"
+            href="/dashboard/products"
             className="mt-10 inline-flex rounded-full bg-lime-400 px-10 py-4 text-sm font-semibold text-gray-900 shadow-sm transition hover:bg-lime-300"
           >
             Shop now
@@ -72,7 +72,7 @@ export default function LandingHeroSectionComponent({ miniProducts }) {
               {miniProducts.map((p) => (
                 <Link
                   key={p.productId}
-                  href={`/products/${p.productId}`}
+                  href={`/dashboard/products/${p.productId}`}
                   className="relative size-14 overflow-hidden rounded-lg bg-gray-100 ring-1 ring-gray-100"
                 >
                   <Image

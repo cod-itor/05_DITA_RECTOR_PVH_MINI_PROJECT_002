@@ -155,7 +155,7 @@ export default async function Home() {
             it to your real promo or newsletter.
           </p>
           <Link
-            href="/products"
+            href="/dashboard/products"
             className="mt-10 inline-flex rounded-full bg-lime-400 px-10 py-4 text-sm font-semibold text-gray-900 transition hover:bg-lime-300"
           >
             Shop now
