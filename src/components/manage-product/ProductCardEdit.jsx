@@ -187,6 +187,8 @@ export default function ProductCardEdit({
     )
       return;
 
+    const normalizedCategoryId = String(form.categoryId).trim();
+
     const requestBody = {
       name: form.productName.trim(),
       description: form.description.trim() || "",
@@ -194,8 +196,13 @@ export default function ProductCardEdit({
       sizes: form.sizes,
       imageUrl: form.imageUrl.trim() || "",
       price: Number(form.price),
-      categoryId: String(form.categoryId),
+      categoryId: normalizedCategoryId,
     };
+
+    console.group("[Manage Product] Save Changes: update request");
+    console.log("productId:", selectedProductId);
+    console.log("requestBody:", requestBody);
+    console.groupEnd();
 
     const selectedCategoryName =
       categoryList.find(
@@ -210,6 +217,10 @@ export default function ProductCardEdit({
           productId: selectedProductId,
           ...requestBody,
         });
+        console.log(
+          "[Manage Product] Update response from onUpdateProduct:",
+          updatedProduct,
+        );
         if (updatedProduct) {
           setItems((prev) =>
             prev.map((item) =>
@@ -243,6 +254,8 @@ export default function ProductCardEdit({
         session.accessToken,
       );
 
+      console.log("[Manage Product] Update response from API:", updatedProduct);
+
       setItems((prev) =>
         prev.map((item) =>
           item.productId === selectedProductId
@@ -263,6 +276,7 @@ export default function ProductCardEdit({
       });
       closeEditModal();
     } catch (error) {
+      console.error("[Manage Product] Update failed:", error);
       const message = error?.message || "Failed to update product";
       setActionError(message);
       sileo.error({

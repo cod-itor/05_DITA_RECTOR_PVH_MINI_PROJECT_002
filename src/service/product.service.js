@@ -179,7 +179,6 @@ export async function updateProductService(productId, requestBody, accessToken) 
     if (!productId) {
         throw new Error("Product ID is required");
     }
-
     const res = await fetch(`${apiBaseUrl}/api/v1/products/${productId}`, {
         method: "PUT",
         headers: getAuthHeaders(accessToken),
@@ -192,17 +191,6 @@ export async function updateProductService(productId, requestBody, accessToken) 
     } catch {
         data = null;
     }
-
-    if (!res.ok) {
-        throw new Error(data?.message || "Failed to update product");
-    }
-
-    const latestProduct = await productByIdService(productId, accessToken);
-
-    if (latestProduct) {
-        return latestProduct;
-    }
-
     const payload = data?.payload;
 
     if (payload) {
