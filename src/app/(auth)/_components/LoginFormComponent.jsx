@@ -50,8 +50,13 @@ export default function LoginFormComponent() {
 
         if (errorMessage.includes("Email and password are required")) {
           errorMessage = "Please enter both email and password";
+        } else if (
+          errorMessage.toLowerCase().includes("must not be blank") ||
+          errorMessage.toLowerCase().includes("must not be null")
+        ) {
+          errorMessage = "Invalid email or password";
         } else if (errorMessage.includes("Invalid email")) {
-          errorMessage = "Invalid email format";
+          errorMessage = "Invalid email or password";
         } else if (errorMessage.includes("No token received")) {
           errorMessage =
             "Server error: No authentication token received. Please contact support.";
@@ -71,7 +76,6 @@ export default function LoginFormComponent() {
           position: "top-center",
           ...sileoBlackTheme,
         });
-        console.error("Login error details:", rawError);
       } else if (result?.ok || !rawError) {
         sileo.success({
           title: "Login successful",
@@ -83,7 +87,6 @@ export default function LoginFormComponent() {
         router.refresh();
       }
     } catch (error) {
-      console.error("Login exception:", error);
       const message =
         error.message || "An unexpected error occurred during login";
       setSubmitError(message);

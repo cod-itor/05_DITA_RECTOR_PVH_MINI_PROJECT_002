@@ -3,6 +3,58 @@ import { jwtDecode } from "jwt-decode";
 
 const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
+async function loginWithPayload(payload) {
+  const response = await fetch(`${apiUrl}/api/v1/auths/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  return { response, data };
+}
+
+function getTokenFromResponse(data) {
+  return data?.payload?.token || data?.data?.token || data?.token || null;
+}
+
+function getErrorMessage(data) {
+  const fieldError =
+    data?.errors && typeof data.errors === "object"
+      ? Object.values(data.errors)[0]
+      : null;
+  const message =
+    fieldError || data?.detail || data?.message || "Invalid credentials";
+
+  if (
+    typeof message === "string" &&
+    (message.toLowerCase().includes("must not be blank") ||
+      message.toLowerCase().includes("must not be null"))
+  ) {
+    return "Invalid email or password";
+  }
+
+  return message;
+}
+
+function buildUser({ decoded, data, email, token }) {
+  return {
+    id: decoded?.id || decoded?.userId || data?.payload?.id || data?.data?.id || email,
+    email:
+      decoded?.email || data?.payload?.email || data?.data?.email || email,
+    name: decoded?.name || data?.payload?.name || data?.data?.name || "User",
+    accessToken: token,
+  };
+}
+
 export const authOptions = {
   providers: [
     CredentialsProvider({
@@ -11,7 +63,7 @@ export const authOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials, req) {
+      async authorize(credentials) {
         const email = credentials?.email?.trim();
         const password = credentials?.password;
 
@@ -19,96 +71,24 @@ export const authOptions = {
           throw new Error("Email and password are required");
         }
 
-        console.log("=== NextAuth authorize() ===");
-        console.log("Credentials received:", { email, password: "***" });
+        const { response: finalResponse, data: finalData } =
+          await loginWithPayload({ email, password });
 
-        try {
-          const loginPayloads = [
-            { email, password },
-            { identifier: email, password },
-          ];
-
-          let response;
-          let data;
-
-          for (const payload of loginPayloads) {
-            console.log("Sending payload to API:", JSON.stringify(payload, null, 2));
-            response = await fetch(`${apiUrl}/api/v1/auths/login`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(payload),
-            });
-
-            data = await response.json();
-
-            if (response.ok) {
-              break;
-            }
-
-            console.warn("Login attempt failed for payload:", payload, data);
-          }
-
-          console.log("API response status:", response.status);
-          console.log("API response body:", JSON.stringify(data, null, 2));
-
-          if (!response.ok) {
-            console.error("Login API error response:", data);
-            const fieldError =
-              data?.errors && typeof data.errors === "object"
-                ? Object.values(data.errors)[0]
-                : null;
-            const errorMsg =
-              fieldError || data.detail || data.message || "Invalid credentials";
-            throw new Error(errorMsg);
-          }
-
-          const token = data.payload?.token || data.data?.token || data.token;
-          if (!token) {
-            console.error("No token in response:", data);
-            throw new Error("No token received from server");
-          }
-
-          let decoded = {};
-          try {
-            decoded = jwtDecode(token);
-            console.log("Token decoded successfully:", { id: decoded.id, email: decoded.email });
-          } catch (decodeError) {
-            console.error("JWT decode error:", decodeError);
-            decoded = {
-              id: email,
-              email,
-              name: "User",
-            };
-          }
-
-          const user = {
-            id:
-              decoded.id ||
-              decoded.userId ||
-              data.payload?.id ||
-              data.data?.id ||
-              email,
-            email:
-              decoded.email ||
-              data.payload?.email ||
-              data.data?.email ||
-              email,
-            name:
-              decoded.name ||
-              data.payload?.name ||
-              data.data?.name ||
-              "User",
-            accessToken: token,
-          };
-          
-          console.log("User authenticated successfully:", { id: user.id, email: user.email });
-          return user;
-        } catch (error) {
-          console.error("Authorization error:", error.message);
-          throw new Error(error.message || "Authentication failed");
+        if (!finalResponse?.ok) {
+          throw new Error(getErrorMessage(finalData));
         }
+
+        const token = getTokenFromResponse(finalData);
+        if (!token) throw new Error("No token received from server");
+
+        let decoded = null;
+        try {
+          decoded = jwtDecode(token);
+        } catch {
+          decoded = { id: email, email, name: "User" };
+        }
+
+        return buildUser({ decoded, data: finalData, email, token });
       },
     }),
   ],
