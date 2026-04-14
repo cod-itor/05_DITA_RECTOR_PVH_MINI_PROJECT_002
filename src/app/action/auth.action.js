@@ -22,15 +22,6 @@ export async function registerUserAction(formData) {
       birthDate,
     };
 
-    console.log("=== REGISTRATION ===");
-    console.log("User Input:", {
-      firstName,
-      lastName,
-      email,
-      password: "***",
-      birthDate,
-    });
-    console.log("Payload being sent to API:", JSON.stringify(body, null, 2));
 
   const response = await fetch(`${apiUrl}/api/v1/auths/register`, {
       method: "POST",
@@ -41,9 +32,6 @@ export async function registerUserAction(formData) {
     });
 
     const data = await response.json();
-
-    console.log("Registration API status:", response.status);
-    console.log("Registration API response:", JSON.stringify(data, null, 2));
 
     if (!response.ok) {
       return {
@@ -58,7 +46,6 @@ export async function registerUserAction(formData) {
       data: data.payload || data.data,
     };
   } catch (error) {
-    console.error("Registration error:", error);
     return {
       success: false,
       message: error.message || "An error occurred during registration",
